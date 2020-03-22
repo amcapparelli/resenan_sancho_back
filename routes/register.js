@@ -4,7 +4,7 @@ const User = require('../models/user');
 
 router.post('/', async function (req, res) {
   try {
-    const { email, name, lastName, password } = req.body;
+    const { email, name, lastName } = req.body;
     User.findOne({ email })
       .then(user => {
         if (user) {
@@ -12,6 +12,7 @@ router.post('/', async function (req, res) {
           return;
         }
       });
+    const password = await User.hashPassword(req.body.password);
     const newUser = new User({ email, name, lastName, password });
     await newUser.save();
     res.json({ message: 'user registred successfully' });
