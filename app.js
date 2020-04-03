@@ -7,7 +7,9 @@ var cors = require('cors');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var loginRouter = require('./routes/login');
+var blogsLiterariosRouter = require('./routes/blogsLiterarios');
 var registerRouter = require('./routes/register');
+var updateRouter = require('./routes/update');
 var app = express();
 require('./lib/connectMongoose');
 
@@ -25,6 +27,8 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/login', loginRouter);
 app.use('/register', registerRouter);
+app.use('/update', updateRouter);
+app.use('/blogs_literarios', blogsLiterariosRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -32,7 +36,7 @@ app.use(function (req, res, next) {
 });
 
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
