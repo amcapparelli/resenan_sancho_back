@@ -7,12 +7,12 @@ router.post('/', async function (req, res) {
     const { title, author, editorial, sinopsis, cover, pages, genre, datePublished, formats } = req.body;
     const book = await Book.findOne({ $and: [{ title }, { author }] });
     if (book) {
-      res.json({ message: 'book already exists' });
+      res.json({ success: false, message: 'book already exists' });
       return;
     }
     const newBook = new Book({ title, author, editorial, sinopsis, cover, pages, genre, datePublished, formats });
     await newBook.save();
-    res.json({ message: 'book registred successfully' });
+    res.json({ success: true, message: 'book registred successfully' });
   } catch (error) {
     res.json({ error });
   }
