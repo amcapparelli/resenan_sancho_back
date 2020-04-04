@@ -9,6 +9,7 @@ var usersRouter = require('./routes/users');
 var loginRouter = require('./routes/login');
 var blogsLiterariosRouter = require('./routes/blogsLiterarios');
 var registerRouter = require('./routes/register');
+var registerBookRouter = require('./routes/registerBook');
 var updateRouter = require('./routes/update');
 var app = express();
 require('./lib/connectMongoose');
@@ -27,6 +28,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/login', loginRouter);
 app.use('/register', registerRouter);
+app.use('/registerBook', registerBookRouter);
 app.use('/update', updateRouter);
 app.use('/blogs_literarios', blogsLiterariosRouter);
 
