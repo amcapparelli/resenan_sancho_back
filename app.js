@@ -4,13 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var loginRouter = require('./routes/login');
-var blogsLiterariosRouter = require('./routes/blogsLiterarios');
-var registerRouter = require('./routes/register');
-var registerBookRouter = require('./routes/registerBook');
-var updateRouter = require('./routes/update');
+
 var app = express();
 require('./lib/connectMongoose');
 
@@ -24,13 +18,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/login', loginRouter);
-app.use('/register', registerRouter);
-app.use('/registerBook', registerBookRouter);
-app.use('/update', updateRouter);
-app.use('/blogs_literarios', blogsLiterariosRouter);
+
+// Import router
+require('./routes/router')(app);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
