@@ -8,15 +8,20 @@ router.post('/', async function (req, res) {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
+
     if (user && await bcrypt.compare(password, user.password)) {
       jwt.sign(
         { user },
         process.env.JWT_SECRET,
         { expiresIn: '1d' },
         (err, token) => {
-          if (err) res.json({ message: 'something went wrong' });
+          if (err) {
+            res.json({ message: 'something went wrong' });
+            return;
+          }
           res.json({ message: 'user logged successfully', success: true, user, token });
         });
+
       return;
     }
     res.json({ message: 'wrong credentials' });
