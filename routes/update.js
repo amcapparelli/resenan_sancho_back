@@ -4,11 +4,12 @@ const User = require('../models/user');
 
 router.post('/', async function (req, res) {
   try {
-    const { email, name, lastName, _id } = req.body;
+    const { avatar, email, name, lastName, _id } = req.body;
     await User.updateOne({ _id }, {
       email,
       name,
       lastName,
+      avatar,
     });
     res.json({ success: true, message: 'user updated successfully' });
   } catch (error) {

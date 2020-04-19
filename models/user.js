@@ -26,6 +26,7 @@ const UserSchema = Schema({
     type: Date,
     default: Date.now
   },
+  avatar: String,
   resetPasswordToken: String,
   resetPasswordExpires: Date
 });
