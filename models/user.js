@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 var Schema = mongoose.Schema;
 
 const UserSchema = Schema({
+  country: String,
   name: {
     type: String,
     index: true,

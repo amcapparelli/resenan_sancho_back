@@ -3,6 +3,7 @@ var jwt = require('jsonwebtoken');
 const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
+const { removeKeys } = require('../utils/removeKeys');
 
 router.post('/', async function (req, res) {
   try {
@@ -19,7 +20,8 @@ router.post('/', async function (req, res) {
             res.json({ message: 'something went wrong' });
             return;
           }
-          res.json({ message: 'user logged successfully', success: true, user, token });
+          const userLogged = removeKeys(user._doc, 'password');
+          res.json({ message: 'user logged successfully', success: true, user: { ...userLogged, token } });
         });
 
       return;
@@ -33,12 +35,13 @@ router.post('/', async function (req, res) {
 router.get('/:token', function (req, res, next) {
   try {
     const { token } = req.params;
-    jwt.verify(token, process.env.JWT_SECRET, function (err, tokenDecoded) {
+    jwt.verify(token, process.env.JWT_SECRET, async function (err, tokenDecoded) {
       if (err) {
         next(err);
         return;
       }
-      res.json({ userSession: { ...tokenDecoded.user, token } });
+      const user = await User.findOne({ email: tokenDecoded.user.email });
+      res.json({ userSession: { ...removeKeys(user._doc, 'password'), token } });
     });
   } catch (error) {
     res.json(error);
