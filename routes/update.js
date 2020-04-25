@@ -6,9 +6,6 @@ const User = require('../models/user');
 router.post('/', verifyToken(), async function (req, res) {
   try {
     const { _id, avatar, country, email, name, lastName } = req.body;
-    console.log('id', _id);
-    console.log('req.authData.user._id', req.authData.user._id);
-
     if (_id !== req.authData.user._id) {
       res.json({ message: 'no tienes autorización para ver este contenido ' });
       return;

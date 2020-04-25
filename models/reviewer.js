@@ -8,10 +8,13 @@ const ReviewerSchema = Schema({
     ref: 'user',
     required: true,
   },
-  descripción: {
+  description: {
     type: String,
   },
   genres: {
+    type: [String],
+  },
+  formats: {
     type: [String],
   },
   blog: {

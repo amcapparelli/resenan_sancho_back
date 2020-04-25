@@ -5,6 +5,7 @@ const router = express.Router();
 var request = require('superagent');
 const Reviewer = require('../models/reviewer');
 const User = require('../models/user');
+const { verifyToken } = require('../lib/auth');
 
 const mailchimpInstance = process.env.MAIL_CHIMP_INSTANCE;
 const listUniqueId = process.env.LIST_UNIQUE_ID;
@@ -33,9 +34,30 @@ const genresMapper = [
 
 router.post('/', async function (req, res) {
   try {
-    const { genres, author, blog, booktube, bookstagram, goodreads, amazon } = req.body;
+    const {
+      genres,
+      author,
+      blog,
+      booktube,
+      bookstagram,
+      goodreads,
+      amazon,
+      description,
+      formats,
+    } = req.body;
+
     const user = await User.findOne({ _id: author });
-    const newReviewer = new Reviewer({ genres, author, blog, booktube, bookstagram, goodreads, amazon });
+    const newReviewer = new Reviewer({
+      genres,
+      author,
+      blog,
+      booktube,
+      bookstagram,
+      goodreads,
+      amazon,
+      description,
+      formats,
+    });
     await newReviewer.save();
     const genresForMailchimp = genresMapper.reduce((acum, curr) => (
       genres.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
@@ -59,8 +81,71 @@ router.post('/', async function (req, res) {
         }
       });
   } catch (error) {
-    res.json({ error });
+    res.json(error);
   }
 });
 
+router.put('/', verifyToken(), async (req, res) => {
+  try {
+    const {
+      genres,
+      author,
+      blog,
+      booktube,
+      bookstagram,
+      goodreads,
+      amazon,
+      description,
+      formats,
+    } = req.body;
+    if (author !== req.authData.user._id) {
+      res.json({ message: 'no tienes autorización para ver este contenido ' });
+      return;
+    }
+    const user = await User.findOne({ _id: author });
+    await Reviewer.updateOne({ author }, {
+      genres,
+      blog,
+      booktube,
+      bookstagram,
+      goodreads,
+      amazon,
+      description,
+      formats,
+    });
+    const reviewerUpdated = {
+      genres,
+      blog,
+      booktube,
+      bookstagram,
+      goodreads,
+      amazon,
+      description,
+      formats,
+    };
+    const genresForMailchimp = genresMapper.reduce((acum, curr) => (
+      genres.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
+    request
+      .put(`${url}${user.email.toLowerCase()}`)
+      .set('Content-Type', 'application/json;charset=utf-8')
+      .set('Authorization', 'Basic ' + new Buffer('anystring:' + mailchimpApiKey).toString('base64'))
+      .send({
+        'email_address': user.email,
+        'status': 'subscribed',
+        'merge_fields': {
+          'FNAME': user.name,
+          ...genresForMailchimp,
+        }
+      })
+      .end(function (err, response) {
+        if (response.status < 300 || (response.status === 400)) {
+          res.json({ success: true, message: 'reviewer updated successfully', reviewer: reviewerUpdated });
+        } else {
+          res.json({ success: false, message: 'no se pudo guardar los cambios' });
+        }
+      });
+  } catch (error) {
+    res.json(error);
+  }
+});
 module.exports = router;
