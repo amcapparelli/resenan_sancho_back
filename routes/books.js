@@ -17,7 +17,7 @@ router.get('/', async function (req, res) {
 
 router.get('/private/:id', verifyToken(), async function (req, res) {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     if (id !== req.authData.user._id) {
       res.json({ message: 'no tienes autorización para ver este contenido ' });
       return;
