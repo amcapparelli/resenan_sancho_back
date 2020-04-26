@@ -21,6 +21,12 @@ router.post('/', async function (req, res) {
             res.json({ message: 'something went wrong' });
             return;
           }
+          res.cookie('token', token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 365,
+            secure: false, //Todo change this according to prod/dev
+            path: '/'
+          });
           userLogged.token = token;
         });
       const reviewer = await Reviewer.findOne({ author: user._id });
@@ -37,9 +43,9 @@ router.post('/', async function (req, res) {
   }
 });
 
-router.get('/:token', function (req, res, next) {
+router.get('/session', function (req, res, next) {
   try {
-    const { token } = req.params;
+    const { token } = req.cookies;
     jwt.verify(token, process.env.JWT_SECRET, async function (err, tokenDecoded) {
       if (err) {
         next(err);
