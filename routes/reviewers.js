@@ -1,10 +1,22 @@
 const express = require('express');
 const router = express.Router();
+const genres = require('../utils/constants/genres');
 const Reviewer = require('../models/reviewer');
 
 router.get('/', async function (req, res) {
+  const { genre } = req.query;
+  const genreName = genre && genres.find(g => g.code === genre).name;
+  const queryParams = {
+    genres: genreName,
+  };
+  const filters = Object.entries(queryParams).reduce(
+    (acum, [key, value]) => [null, undefined, ''].includes(value) ? acum : { ...acum, [key]: value }, {}
+  );
+
   try {
-    const reviewers = await Reviewer.find().limit(20).populate('author', 'name lastName avatar country');
+    const reviewers = await Reviewer
+      .find(filters)
+      .limit(20).populate('author', 'name lastName avatar country');
     res.json({
       reviewers
     });
