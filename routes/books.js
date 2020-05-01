@@ -5,8 +5,19 @@ const Book = require('../models/book');
 const User = require('../models/user');
 
 router.get('/', async function (req, res) {
+  const { genre, format } = req.query;
+  const queryParams = {
+    genre,
+    formats: format
+  };
+  const filters = Object.entries(queryParams).reduce(
+    (acum, [key, value]) => [null, undefined, ''].includes(value) ? acum : { ...acum, [key]: value }, {}
+  );
   try {
-    const books = await Book.find().limit(20).populate('author', 'name lastName');
+    const books = await Book
+      .find(filters)
+      .limit(20)
+      .populate('author', 'name lastName');
     res.json({
       books
     });

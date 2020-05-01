@@ -4,10 +4,11 @@ const genres = require('../utils/constants/genres');
 const Reviewer = require('../models/reviewer');
 
 router.get('/', async function (req, res) {
-  const { genre } = req.query;
+  const { genre, format } = req.query;
   const genreName = genre && genres.find(g => g.code === genre).name;
   const queryParams = {
     genres: genreName,
+    formats: format
   };
   const filters = Object.entries(queryParams).reduce(
     (acum, [key, value]) => [null, undefined, ''].includes(value) ? acum : { ...acum, [key]: value }, {}
