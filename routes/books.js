@@ -5,7 +5,7 @@ const Book = require('../models/book');
 const User = require('../models/user');
 
 router.get('/', async function (req, res) {
-  const { genre, format } = req.query;
+  const { genre, format, page } = req.query;
   const queryParams = {
     genre,
     formats: format
@@ -14,12 +14,18 @@ router.get('/', async function (req, res) {
     (acum, [key, value]) => [null, undefined, ''].includes(value) ? acum : { ...acum, [key]: value }, {}
   );
   try {
+    const resultsPerPage = 20;
+    const totalElements = await Book.find(filters).count();
+    const totalPages = Math.ceil(totalElements / resultsPerPage);
     const books = await Book
       .find(filters)
-      .limit(20)
+      .limit(resultsPerPage)
+      .skip((page - 1) * resultsPerPage)
       .populate('author', 'name lastName');
     res.json({
-      books
+      books,
+      totalElements,
+      totalPages,
     });
   } catch (error) {
     res.json(error);
