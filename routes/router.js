@@ -10,6 +10,7 @@ const blogsLiterariosRouter = require('./blogsLiterarios');
 const reviewersRouter = require('./reviewers');
 const booksRouter = require('./books');
 const bookRouter = require('./book');
+const promotionsRouter = require('./promotions');
 const registerRouter = require('./register');
 const registerBookRouter = require('./registerBook');
 const registerBlogRouter = require('./registerBlog');
@@ -29,6 +30,7 @@ class Router {
     app.use(namedRoutes.blogs_literarios, blogsLiterariosRouter);
     app.use(namedRoutes.reviewers, reviewersRouter);
     app.use(namedRoutes.books, booksRouter);
+    app.use(namedRoutes.promotions, promotionsRouter);
     app.use(namedRoutes.book, bookRouter);
   }
 }

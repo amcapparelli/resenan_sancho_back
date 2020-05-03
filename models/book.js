@@ -43,6 +43,9 @@ const BookSchema = Schema({
   create_at: {
     type: Date,
     default: Date.now
+  },
+  copies: {
+    type: Number
   }
 });
 
