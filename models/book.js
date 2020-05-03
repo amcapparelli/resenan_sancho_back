@@ -45,7 +45,12 @@ const BookSchema = Schema({
     default: Date.now
   },
   copies: {
-    type: Number
+    type: Number,
+    default: 0
+  },
+  freePromoAvailable: {
+    type: Boolean,
+    default: true
   }
 });
 
