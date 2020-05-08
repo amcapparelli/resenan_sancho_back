@@ -51,7 +51,11 @@ const BookSchema = Schema({
   freePromoAvailable: {
     type: Boolean,
     default: true
-  }
+  },
+  reviewersOrders: [{
+    type: Schema.ObjectId,
+    ref: 'user'
+  }],
 });
 
 module.exports = mongoose.model('book', BookSchema);

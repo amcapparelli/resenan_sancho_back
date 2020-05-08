@@ -38,7 +38,7 @@ const formatsMapper = [
   { name: 'mobi', code: 'F_MOBI' },
   { name: 'PDF', code: 'F_PDF' },
   { name: 'audiolibro', code: 'F_AUDIO' },
-]
+];
 
 router.post('/', async function (req, res) {
   try {
