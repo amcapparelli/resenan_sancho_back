@@ -36,9 +36,20 @@ const ReviewerSchema = Schema({
   amazon: {
     url: String,
     name: String,
-  }
+  },
+  create_at: {
+    type: Date,
+    default: Date.now
+  },
 });
 
+ReviewerSchema.index({
+  'blog.name': 'text',
+  'booktube.name': 'text',
+  'bookstagram.name': 'text',
+  'goodreads.name': 'text',
+  'amazon.name': 'text',
+});
 ReviewerSchema.index({ genres: 1 });
 ReviewerSchema.index({ 'blog.name': 1 });
 module.exports = mongoose.model('reviewer', ReviewerSchema);

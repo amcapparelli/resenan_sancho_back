@@ -19,6 +19,7 @@ router.get('/', async function (req, res) {
     const totalPages = Math.ceil(totalElements / resultsPerPage);
     const books = await Book
       .find(filters)
+      .sort({ create_at: -1 })
       .limit(resultsPerPage)
       .skip((page - 1) * resultsPerPage)
       .populate('author', 'name lastName');
