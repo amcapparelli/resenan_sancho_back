@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../lib/auth');
 const Book = require('../models/book');
+const User = require('../models/user');
+const {
+  transporter,
+  bookCopyRequestTemplate
+} = require('../lib/email');
 
 router.post('/', verifyToken(), async function (req, res) {
   try {
@@ -32,6 +37,19 @@ router.post('/', verifyToken(), async function (req, res) {
       res.json({ success: false, message: 'No puedes pedir una copia de un libro propio.' });
       return;
     }
+
+    //Send email to author
+    const author = await User.findOne({ _id: book.author });
+    const emailTemplate = bookCopyRequestTemplate(message, author.email, user.email);
+    const sendMail = () => {
+      transporter.sendMail(emailTemplate, (err) => {
+        if (err) {
+          console.log('err', err);
+          res.status(500).json('Error sending email');
+        }
+      });
+    };
+    sendMail();
 
     // Save the reviewer that ordered the copy & discount one copy from availables
     await Book.updateOne(

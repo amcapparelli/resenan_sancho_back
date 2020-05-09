@@ -36,4 +36,10 @@ UserSchema.statics.hashPassword = (plainPassword) => {
   return bcrypt.hash(plainPassword, 14);
 };
 
+UserSchema.pre('remove', function (next) {
+  this.model('book').deleteMany({ author: this._id }, next);
+  this.model('reviewer').deleteMany({ author: this._id }, next);
+  next();
+});
+
 module.exports = mongoose.model('user', UserSchema);

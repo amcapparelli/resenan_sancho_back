@@ -5,6 +5,7 @@ const namedRoutes = require('../lib/namedRoutes');
 const blogsLiterariosRouter = require('./blogsLiterarios');
 const bookRouter = require('./book');
 const booksRouter = require('./books');
+const deleteUserRouter = require('./deleteUser');
 const indexRouter = require('./index');
 const loginRouter = require('./login');
 const logoutRouter = require('./logout');
@@ -23,6 +24,7 @@ class Router {
     app.use(namedRoutes.blogs_literarios, blogsLiterariosRouter);
     app.use(namedRoutes.book, bookRouter);
     app.use(namedRoutes.books, booksRouter);
+    app.use(namedRoutes.deleteUser, deleteUserRouter);
     app.use(namedRoutes.home, indexRouter);
     app.use(namedRoutes.login, loginRouter);
     app.use(namedRoutes.logout, logoutRouter);

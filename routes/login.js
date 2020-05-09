@@ -10,6 +10,9 @@ router.post('/', async function (req, res) {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
+    if (!user) {
+      res.json({ success: false, message: 'No existe un usuario con ese email' });
+    }
     let userLogged = removeKeys(user._doc, 'password');
     if (user && await bcrypt.compare(password, user.password)) {
       jwt.sign(
