@@ -14,7 +14,7 @@ router.put('/:id', verifyToken(), async function (req, res) {
     }
     const book = await Book.findOne({ _id: id });
     const promoInfo = {};
-    if (book.freePromoAvailable && copies === 3 || copies === 10) {
+    if (book.freePromoAvailable && copies === 2 || copies === 5) {
       promoInfo.freePromoAvailable = false;
       promoInfo.copies = book.copies + copies;
     } else {
@@ -22,6 +22,7 @@ router.put('/:id', verifyToken(), async function (req, res) {
         success: false,
         message: 'No puedes añadir más ejemplares con esta opción.',
       });
+      return;
     }
     await Book.updateOne({ _id: id }, { ...promoInfo });
     const bookUpdated = await Book.findOne({ _id: id });

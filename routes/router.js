@@ -11,6 +11,7 @@ const loginRouter = require('./login');
 const logoutRouter = require('./logout');
 const orderBookRouter = require('./orderBook');
 const promotionsRouter = require('./promotions');
+const paymentCheckoutRouter = require('./paymentCheckout');
 const registerRouter = require('./register');
 const registerBlogRouter = require('./registerBlog');
 const registerBookRouter = require('./registerBook');
@@ -30,6 +31,7 @@ class Router {
     app.use(namedRoutes.logout, logoutRouter);
     app.use(namedRoutes.orderBook, orderBookRouter);
     app.use(namedRoutes.promotions, promotionsRouter);
+    app.use(namedRoutes.paymentCheckout, paymentCheckoutRouter);
     app.use(namedRoutes.register, registerRouter);
     app.use(namedRoutes.registerBlog, registerBlogRouter);
     app.use(namedRoutes.registerBook, registerBookRouter);
