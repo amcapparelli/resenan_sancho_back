@@ -11,7 +11,8 @@ router.get('/', async function (req, res) {
     formats: format
   };
   const filters = Object.entries(queryParams).reduce(
-    (acum, [key, value]) => [null, undefined, ''].includes(value) ? acum : { ...acum, [key]: value }, {}
+    (acum, [key, value]) => [null, undefined, ''].includes(value) ? acum : { ...acum, [key]: value },
+    { copies: { $gt: 0 } }
   );
   try {
     const resultsPerPage = 20;
