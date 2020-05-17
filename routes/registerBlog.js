@@ -34,9 +34,9 @@ const genresMapper = [
 
 const formatsMapper = [
   { name: 'papel', code: 'F_PAPEL' },
-  { name: 'ePUB', code: 'F_EPUB' },
+  { name: 'epub', code: 'F_EPUB' },
   { name: 'mobi', code: 'F_MOBI' },
-  { name: 'PDF', code: 'F_PDF' },
+  { name: 'pdf', code: 'F_PDF' },
   { name: 'audiolibro', code: 'F_AUDIO' },
 ];
 
