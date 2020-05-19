@@ -23,6 +23,7 @@ const UserSchema = Schema({
     type: String,
     required: true
   },
+  emailAuthorListStatus: String,
   created_at: {
     type: Date,
     default: Date.now

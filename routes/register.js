@@ -1,10 +1,15 @@
 const express = require('express');
 const router = express.Router();
+var validator = require('email-validator');
 const User = require('../models/user');
 
 router.post('/', async function (req, res) {
   try {
     const { email, name, lastName } = req.body;
+    const validEmail = validator.validate(email);
+    if (!validEmail) {
+      res.json({ success: false, message: 'tu email no es válido' });
+    }
     User.findOne({ email })
       .then(user => {
         if (user) {

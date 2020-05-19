@@ -13,7 +13,7 @@ router.post('/', async function (req, res) {
     }
     const newBook = new Book({ title, author, editorial, synopsis, cover, pages, genre, datePublished, formats });
     await newBook.save();
-    res.json({ success: true, message: 'book registred successfully' });
+    res.json({ success: true, message: '¡Libro registrado! Puedes editarlo y promocionarlo desde la sección "Mis Libros"' });
   } catch (error) {
     res.json({ error });
   }

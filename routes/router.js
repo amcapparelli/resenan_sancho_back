@@ -16,6 +16,7 @@ const registerRouter = require('./register');
 const registerBlogRouter = require('./registerBlog');
 const registerBookRouter = require('./registerBook');
 const reviewersRouter = require('./reviewers');
+const suscribeAuthorRouter = require('./suscribeAuthor');
 const updateRouter = require('./update');
 const usersRouter = require('./users');
 
@@ -36,6 +37,7 @@ class Router {
     app.use(namedRoutes.registerBlog, registerBlogRouter);
     app.use(namedRoutes.registerBook, registerBookRouter);
     app.use(namedRoutes.reviewers, reviewersRouter);
+    app.use(namedRoutes.suscribeAuthor, suscribeAuthorRouter);
     app.use(namedRoutes.update, updateRouter);
     app.use(namedRoutes.users, usersRouter);
   }
