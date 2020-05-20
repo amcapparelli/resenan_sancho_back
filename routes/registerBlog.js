@@ -65,6 +65,7 @@ router.post('/', async function (req, res) {
       amazon,
       description,
       formats,
+      updated_at: Date.now(),
     });
     await newReviewer.save();
     const genresForMailchimp = genresMapper.reduce((acum, curr) => (
@@ -125,6 +126,7 @@ router.put('/', verifyToken(), async (req, res) => {
       amazon,
       description,
       formats,
+      updated_at: Date.now(),
     });
     const reviewerUpdated = {
       genres,
