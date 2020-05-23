@@ -48,9 +48,7 @@ router.get('/private/:id', verifyToken(), async function (req, res) {
       return;
     }
     const books = await Book.find({ author: user._id }).populate('author', 'name lastName');
-    res.json({
-      books
-    });
+    res.json({ books });
   } catch (error) {
     res.json(error);
   }

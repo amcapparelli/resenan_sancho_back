@@ -143,13 +143,18 @@ router.put('/', verifyToken(), async (req, res) => {
     const formatsForMailchimp = formatsMapper.reduce((acum, curr) => (
       formats.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
     const userCountry = user.country ? user.country : 'N/A';
+    const response = await request
+      .get(`${url}${user.email.toLowerCase()}`)
+      .set('Content-Type', 'application/json;charset=utf-8')
+      .set('Authorization', 'Basic ' + new Buffer('anystring:' + mailchimpApiKey).toString('base64'));
+
     request
       .put(`${url}${user.email.toLowerCase()}`)
       .set('Content-Type', 'application/json;charset=utf-8')
       .set('Authorization', 'Basic ' + new Buffer('anystring:' + mailchimpApiKey).toString('base64'))
       .send({
         'email_address': user.email,
-        'status': 'subscribed',
+        'status': response.body.status,
         'merge_fields': {
           'FNAME': user.name,
           'PAIS': userCountry,
