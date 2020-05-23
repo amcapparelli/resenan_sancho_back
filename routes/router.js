@@ -2,7 +2,6 @@
 const namedRoutes = require('../lib/namedRoutes');
 
 // Dependencies
-const blogsLiterariosRouter = require('./blogsLiterarios');
 const bookRouter = require('./book');
 const booksRouter = require('./books');
 const deleteUserRouter = require('./deleteUser');
@@ -14,6 +13,7 @@ const promotionsRouter = require('./promotions');
 const paymentCheckoutRouter = require('./paymentCheckout');
 const registerRouter = require('./register');
 const registerReviewerRouter = require('./registerReviewer');
+const reviewerRouter = require('./reviewer');
 const registerBookRouter = require('./registerBook');
 const reviewersRouter = require('./reviewers');
 const suscribeAuthorRouter = require('./suscribeAuthor');
@@ -23,7 +23,6 @@ const usersRouter = require('./users');
 // Router class
 class Router {
   constructor(app) {
-    app.use(namedRoutes.blogs_literarios, blogsLiterariosRouter);
     app.use(namedRoutes.book, bookRouter);
     app.use(namedRoutes.books, booksRouter);
     app.use(namedRoutes.deleteUser, deleteUserRouter);
@@ -37,6 +36,7 @@ class Router {
     app.use(namedRoutes.registerReviewer, registerReviewerRouter);
     app.use(namedRoutes.registerBook, registerBookRouter);
     app.use(namedRoutes.reviewers, reviewersRouter);
+    app.use(namedRoutes.reviewer, reviewerRouter);
     app.use(namedRoutes.suscribeAuthor, suscribeAuthorRouter);
     app.use(namedRoutes.update, updateRouter);
     app.use(namedRoutes.users, usersRouter);

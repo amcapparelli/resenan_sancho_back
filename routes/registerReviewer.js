@@ -55,6 +55,11 @@ router.post('/', async function (req, res) {
     } = req.body;
 
     const user = await User.findOne({ _id: author });
+    const reviewer = await Reviewer.findOne({ author });
+    if (reviewer) {
+      res.json({ success: false, message: 'Hubo un error, ya existe un perfil de reseñador para este usuario.' });
+      return;
+    }
     const newReviewer = new Reviewer({
       genres,
       author,
@@ -89,9 +94,13 @@ router.post('/', async function (req, res) {
       })
       .end(function (err, response) {
         if (response.status < 300 || (response.status === 400)) {
-          res.json({ success: true, message: 'cambios guardados' });
+          res.json({
+            success: true,
+            message: '¡Enhorabuena! Tu perfil de reseñador literario fue dado de alta.',
+            reviewer: newReviewer
+          });
         } else {
-          res.json({ success: false, message: 'no se pudo guardar los cambios' });
+          res.json({ success: false, message: 'no se pudo guardar algunos cambios.' });
         }
       });
   } catch (error) {

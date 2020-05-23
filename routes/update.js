@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../lib/auth');
 const User = require('../models/user');
+const Reviewer = require('../models/reviewer');
 
 router.post('/', verifyToken(), async function (req, res) {
   try {
@@ -25,7 +26,12 @@ router.post('/', verifyToken(), async function (req, res) {
       name,
       lastName
     };
-    res.json({ success: true, message: 'user updated successfully', user: userUpdated });
+    const reviewer = await Reviewer.findOne({ author: _id });
+    res.json({
+      success: true,
+      message: 'user updated successfully',
+      user: { userUpdated, reviewerInfo: reviewer }
+    });
   } catch (error) {
     res.json(error);
   }
