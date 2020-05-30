@@ -1,6 +1,18 @@
 {
   "name": "resenan-sancho-back",
   "version": 2,
+  "builds": [
+    {
+      "src": "app.js",
+      "use": "@now/node-server"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "app.js"
+    }
+  ],
   "env": {
     "MONGOOSE_CONNECTION_STRING": "@my-mongodb-uri"
   }
