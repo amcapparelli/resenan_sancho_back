@@ -30,7 +30,7 @@ router.post('/', verifyToken(), async function (req, res) {
     res.json({
       success: true,
       message: 'user updated successfully',
-      user: { userUpdated, reviewerInfo: reviewer }
+      user: { ...userUpdated, reviewerInfo: reviewer }
     });
   } catch (error) {
     res.json(error);
