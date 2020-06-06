@@ -7,7 +7,7 @@ module.exports = [
   {
     id: 2,
     copies: 5,
-    price: 990,
+    price: 10, // 10 when testing, 990 when normal
   },
   {
     id: 3,
