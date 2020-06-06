@@ -7,12 +7,12 @@ module.exports = [
   {
     id: 2,
     copies: 5,
-    price: 10, // 10 when testing, 990 when normal
+    price: 50, // 50 when testing, 990 when normal
   },
   {
     id: 3,
     copies: 25,
-    price: 6990,
+    price: 50, // 50 when testing, 6990 when normal
   },
 ];
 
