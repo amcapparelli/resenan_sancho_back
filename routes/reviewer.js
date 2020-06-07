@@ -6,9 +6,11 @@ router.get('/:id', async function (req, res) {
   const { id } = req.params;
   try {
     const reviewer = await Reviewer.findOne({ author: id });
-    res.json({
-      reviewer,
-    });
+    if (reviewer) {
+      res.json({ reviewer });
+    } else {
+      res.json({ reviewer: {} });
+    }
   } catch (error) {
     res.json(error);
   }

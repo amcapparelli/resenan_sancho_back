@@ -40,7 +40,7 @@ router.post('/', verifyToken(), async function (req, res) {
 
     //Send email to author
     const author = await User.findOne({ _id: book.author });
-    const emailTemplate = bookCopyRequestTemplate(message, author.email, user.email);
+    const emailTemplate = bookCopyRequestTemplate(message, author.email, user.email, book.title);
     const sendMail = () => {
       transporter.sendMail(emailTemplate, (err) => {
         if (err) {
