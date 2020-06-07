@@ -11,6 +11,8 @@ const {
 router.post('/', async function (req, res) {
   try {
     const { title, author, editorial, synopsis, cover, pages, genre, datePublished, formats } = req.body;
+    console.log('author', author);
+
     const book = await Book.findOne({ $and: [{ title }, { author }] });
     if (book) {
       res.json({ success: false, message: 'Este libro ya existe. Para actualizarlo ve a la sección "Mis Libros"' });
@@ -20,7 +22,7 @@ router.post('/', async function (req, res) {
     await newBook.save();
     //Send email to author
     const user = await User.findOne({ _id: author });
-    const emailTemplate = newBookTemplate(user.email, user.name, book.title);
+    const emailTemplate = newBookTemplate(user.email, user.name, title);
     const sendMail = () => {
       transporter.sendMail(emailTemplate, (err) => {
         if (err) {
