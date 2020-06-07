@@ -50,13 +50,13 @@ router.post('/', async function (req, res) {
         }
       }
       res.json({
-        message: 'user logged successfully',
+        message: 'usuario logueado correctamente',
         success: true,
         user: { ...userLogged, reviewerInfo: reviewer },
       });
       return;
     }
-    res.json({ message: 'wrong credentials' });
+    res.json({ message: 'credenciales incorrectas' });
   } catch (error) {
     res.json(error);
   }

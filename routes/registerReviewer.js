@@ -96,7 +96,7 @@ router.post('/', async function (req, res) {
         if (response.status < 300 || (response.status === 400)) {
           res.json({
             success: true,
-            message: '¡Enhorabuena! Tu perfil de reseñador literario fue dado de alta.',
+            message: '¡Enhorabuena! Tu perfil de reseñadora literaria fue dado de alta.',
             reviewer: newReviewer
           });
         } else {
@@ -173,7 +173,7 @@ router.put('/', verifyToken(), async (req, res) => {
       })
       .end(function (err, response) {
         if (response.status < 300 || (response.status === 400)) {
-          res.json({ success: true, message: 'reviewer updated successfully', reviewer: reviewerUpdated });
+          res.json({ success: true, message: '¡Has actualizado tu perfil de reseñadora literaria correctamente!', reviewer: reviewerUpdated });
         } else {
           res.json({ success: false, message: 'no se pudo guardar los cambios' });
         }
