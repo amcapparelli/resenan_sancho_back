@@ -62,12 +62,12 @@ router.post('/', async function (req, res) {
   }
 });
 
-router.get('/session', function (req, res) {
+router.get('/session', function (req, res, next) {
   try {
     const { token } = req.cookies;
     jwt.verify(token, process.env.JWT_SECRET, async function (err, tokenDecoded) {
       if (err) {
-        res.json({ success: false, message: 'no token available' });
+        next(err);
         return;
       }
       const user = await User.findOne({ email: tokenDecoded.user.email });
