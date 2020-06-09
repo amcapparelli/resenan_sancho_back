@@ -65,6 +65,9 @@ router.post('/', async function (req, res) {
 router.get('/session', function (req, res, next) {
   try {
     const { token } = req.cookies;
+    if (!token) {
+      res.json({ success: false, message: 'no token available' });
+    }
     jwt.verify(token, process.env.JWT_SECRET, async function (err, tokenDecoded) {
       if (err) {
         next(err);
