@@ -9,6 +9,7 @@ router.post('/', async function (req, res) {
     const validEmail = validator.validate(email);
     if (!validEmail) {
       res.json({ success: false, message: 'tu email no es válido' });
+      return;
     }
     User.findOne({ email })
       .then(user => {
