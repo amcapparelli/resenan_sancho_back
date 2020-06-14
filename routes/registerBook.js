@@ -11,8 +11,6 @@ const {
 router.post('/', async function (req, res) {
   try {
     const { title, author, editorial, synopsis, cover, pages, genre, datePublished, formats } = req.body;
-    console.log('author', author);
-
     const book = await Book.findOne({ $and: [{ title }, { author }] });
     if (book) {
       res.json({ success: false, message: 'Este libro ya existe. Para actualizarlo ve a la sección "Mis Libros"' });
@@ -26,13 +24,15 @@ router.post('/', async function (req, res) {
     const sendMail = () => {
       transporter.sendMail(emailTemplate, (err) => {
         if (err) {
-          console.log('err', err);
           res.status(500).json('Error sending email');
         }
       });
     };
     sendMail();
-    res.json({ success: true, message: '¡Libro registrado! Puedes editarlo y promocionarlo desde la sección "Mis Libros"' });
+    res.json({
+      success: true,
+      message: '¡Libro registrado! Puedes editarlo desde la sección "Mis Libros". ¡No te olvides de agregar ejemplares con la opción PROMOCIONAR!'
+    });
   } catch (error) {
     res.json({ error });
   }
