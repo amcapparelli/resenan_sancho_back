@@ -8,7 +8,7 @@ router.post('/', verifyToken(), async function (req, res) {
   try {
     const { _id, avatar, country, email, name, lastName } = req.body;
     if (_id !== req.authData.user._id) {
-      res.json({ message: 'no tienes autorización para ver este contenido ' });
+      res.json({ message: 'noPermissions' });
       return;
     }
     await User.updateOne({ _id }, {
@@ -29,7 +29,7 @@ router.post('/', verifyToken(), async function (req, res) {
     const reviewer = await Reviewer.findOne({ author: _id });
     res.json({
       success: true,
-      message: 'user updated successfully',
+      message: 'userUpdatedSuccessfully',
       user: { ...userUpdated, reviewerInfo: reviewer }
     });
   } catch (error) {
