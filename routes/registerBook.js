@@ -46,6 +46,12 @@ router.put('/:id', verifyToken(), async function (req, res) {
       res.json({ message: 'no tienes autorización para ver este contenido ' });
       return;
     }
+    const book = await Book.findOne({ _id: id });
+
+    if (!book.author.equals(req.authData.user._id)) {
+      res.json({ message: 'noPermissions' });
+      return;
+    }
     await Book.updateOne({ _id: id }, {
       title,
       editorial,

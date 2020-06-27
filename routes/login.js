@@ -22,7 +22,7 @@ router.post('/', async function (req, res) {
     let userLogged = removeKeys(user._doc, 'password');
     if (user && await bcrypt.compare(password, user.password)) {
       jwt.sign(
-        { user },
+        { user: userLogged },
         process.env.JWT_SECRET,
         { expiresIn: '1d' },
         (err, token) => {
