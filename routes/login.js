@@ -33,7 +33,7 @@ router.post('/', async function (req, res) {
           res.cookie('token', token, {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 365,
-            secure: false, //Todo change this according to prod/dev
+            secure: true, //Todo change this according to prod/dev
             path: '/'
           });
           userLogged.token = token;
