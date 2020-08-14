@@ -34,7 +34,6 @@ router.post('/', async function (req, res) {
           res.cookie('token', token, {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 365,
-            sameSite: 'none',
             secure: true, //Todo change this according to prod/dev
             path: '/'
           });
