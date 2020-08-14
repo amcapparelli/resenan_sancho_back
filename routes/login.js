@@ -34,7 +34,7 @@ router.post('/', async function (req, res) {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 365,
             sameSite: 'lax',
-            secure: false, //Todo change this according to prod/dev
+            secure: true,
             path: '/'
           });
           userLogged.token = token;
