@@ -30,13 +30,14 @@ router.post('/', async function (req, res) {
             res.json({ message: 'something went wrong' });
             return;
           }
-          userLogged.token = token;
           res.cookie('token', token, {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 365,
+            sameSite: false,
             secure: true, //Todo change this according to prod/dev
             path: '/'
           });
+          userLogged.token = token;
         });
       const reviewer = await Reviewer.findOne({ author: user._id });
       if (user.emailAuthorListStatus) {
