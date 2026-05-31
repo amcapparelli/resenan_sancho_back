@@ -17,6 +17,7 @@ if (!MONGOOSE_URI || !MONGOOSE_URI.toLowerCase().includes('localhost')) {
 }
 
 const genres = ['ADV', 'BIO', 'CIF', 'CRI', 'ERO', 'FAN', 'FCH', 'JUV', 'HIF', 'HUM', 'POE', 'POL', 'PSD', 'ROM', 'SUS', 'TER', 'THR'];
+const genreNames = ['adventure', 'biography', 'cienceFiction', 'crime', 'erotica', 'fantasy', 'forChildren', 'juvenile', 'historicalFiction', 'humor', 'poetry', 'policial', 'psychologicalDrama', 'romantic', 'suspense', 'terror', 'thriller'];
 const formats = ['Paperback', 'Hardcover', 'eBook', 'Audiobook'];
 const editorials = ['Penguin Random House', 'HarperCollins', 'Simon & Schuster', 'Hachette', 'Macmillan', 'Planeta', 'Anagrama', 'Alfaguara'];
 const countries = ['Spain', 'Mexico', 'Argentina', 'Colombia', 'USA', 'France', 'Germany', 'UK'];
@@ -109,8 +110,8 @@ async function seed() {
   const reviewerUsers = users.slice(0, 6);
   const reviewerData = reviewerUsers.map((user, i) => ({
     author: user._id,
-    description: `Book reviewer passionate about ${pick(genres)} and ${pick(genres)}.`,
-    genres: pickMany(genres, 1, 4),
+    description: `Book reviewer passionate about ${pick(genreNames)} and ${pick(genreNames)}.`,
+    genres: pickMany(genreNames, 1, 4),
     formats: pickMany(formats, 1, 3),
     blog: i % 2 === 0 ? { url: `https://blog${i}.example.com`, name: `${user.name}'s Book Blog` } : {},
     booktube: i % 3 === 0 ? { url: `https://youtube.com/channel/${i}`, name: `${user.name}Reads` } : {},

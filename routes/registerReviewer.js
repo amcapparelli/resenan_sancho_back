@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 var request = require('superagent');
+const crypto = require('crypto');
 const Reviewer = require('../models/reviewer');
 const User = require('../models/user');
 const { verifyToken } = require('../lib/auth');
@@ -81,7 +82,7 @@ router.post('/', async function (req, res) {
     request
       .post(url)
       .set('Content-Type', 'application/json;charset=utf-8')
-      .set('Authorization', 'Basic ' + new Buffer('anystring:' + mailchimpApiKey).toString('base64'))
+      .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'))
       .send({
         'email_address': user.email,
         'status': 'subscribed',
@@ -93,7 +94,8 @@ router.post('/', async function (req, res) {
         }
       })
       .end(function (err, response) {
-        if (response.status < 300 || (response.status === 400)) {
+        console.log("responseeeeeeeee", err, response.status, response.text)
+        if (!err && response && response.status >= 200 && response.status < 300) {
           res.json({
             success: true,
             message: '¡Enhorabuena! Tu perfil de reseñadora literaria fue dado de alta.',
@@ -152,15 +154,16 @@ router.put('/', verifyToken(), async (req, res) => {
     const formatsForMailchimp = formatsMapper.reduce((acum, curr) => (
       formats.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
     const userCountry = user.country ? user.country : 'N/A';
+    const subscriberHash = crypto.createHash('md5').update(user.email.toLowerCase()).digest('hex');
     const response = await request
-      .get(`${url}${user.email.toLowerCase()}`)
+      .get(`${url}${subscriberHash}`)
       .set('Content-Type', 'application/json;charset=utf-8')
-      .set('Authorization', 'Basic ' + new Buffer('anystring:' + mailchimpApiKey).toString('base64'));
+      .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'));
 
     request
-      .put(`${url}${user.email.toLowerCase()}`)
+      .put(`${url}${subscriberHash}`)
       .set('Content-Type', 'application/json;charset=utf-8')
-      .set('Authorization', 'Basic ' + new Buffer('anystring:' + mailchimpApiKey).toString('base64'))
+      .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'))
       .send({
         'email_address': user.email,
         'status': response.body.status,
@@ -172,7 +175,7 @@ router.put('/', verifyToken(), async (req, res) => {
         }
       })
       .end(function (err, response) {
-        if (response.status < 300 || (response.status === 400)) {
+        if (!err && response && response.status >= 200 && response.status < 300) {
           res.json({ success: true, message: '¡Has actualizado tu perfil de reseñadora literaria correctamente!', reviewer: reviewerUpdated });
         } else {
           res.json({ success: false, message: 'no se pudo guardar los cambios' });
