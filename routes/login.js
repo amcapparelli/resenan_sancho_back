@@ -44,7 +44,7 @@ router.post('/', async function (req, res) {
         const response = await request
           .get(`${url}${user.email.toLowerCase()}`)
           .set('Content-Type', 'application/json;charset=utf-8')
-          .set('Authorization', 'Basic ' + new Buffer('anystring:' + mailchimpApiKey).toString('base64'));
+          .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'));
         if (response.body.status !== user.emailAuthorListStatus) {
           await User.updateOne({ _id: user._id }, { emailAuthorListStatus: response.body.status });
           userLogged.emailAuthorListStatus = response.body.status;

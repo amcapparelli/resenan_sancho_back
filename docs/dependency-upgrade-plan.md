@@ -46,8 +46,8 @@ Check off boxes as you go and record notes/dates in the log at the bottom.
   `app.use(function (err, req, res) {...})` with only **3 args**. Express only recognizes an
   error handler when it has **4 args** (`err, req, res, next`). As written it's treated as
   normal middleware and never runs on errors. Fix during the Express phase.
-- [ ] **Deprecated `Buffer`**: `routes/login.js` uses `new Buffer(...)` → replace with
-  `Buffer.from(...)` (also required for newer Node).
+- [x] **Deprecated `Buffer`** (Phase 1): replaced `new Buffer(...)` with `Buffer.from(...)`.
+  Found in 4 places, not 1: `routes/login.js`, `routes/deleteUser.js`, and `routes/suscribeAuthor.js` (×2).
 - [x] **node_modules / lockfile drift** (Phase 0): installed `bcrypt` (4.0.1) ≠ declared
   (`^5.0.0`), and `package-lock.json` was `lockfileVersion: 1` (npm 6). Resolved by a clean
   reinstall — `bcrypt` now `5.1.1`, lockfile regenerated at `lockfileVersion: 3`, `npm ls` clean.
@@ -68,16 +68,18 @@ Check off boxes as you go and record notes/dates in the log at the bottom.
   `GET /books` both returned `200`. (Noted Mongo driver deprecation warnings —
   `useUnifiedTopology`, `collection.count` — addressed in Phase 5.)
 
-## Phase 1 — Node 22 LTS
+## Phase 1 — Node 22 LTS ✅ (completed 2026-06-18)
 
-- [ ] Bump `engines.node` in `package.json` to `>=22 <23` (or pin `22.x`).
-- [ ] Add `.nvmrc` with `22` and document `nvm use` in the README.
-- [ ] Install/switch local toolchain to Node 22 and reinstall (`nvm install 22 && nvm use 22`,
-  then `rm -rf node_modules && npm install`) so native modules (bcrypt) build against Node 22.
-- [ ] If/when CI exists, set the workflow Node version to 22. (No CI config found in repo yet —
-  consider adding a GitHub Actions workflow that runs `npm ci && npm test`.)
-- [ ] Replace `new Buffer(...)` with `Buffer.from(...)` in `routes/login.js`.
-- [ ] Smoke test on Node 22.
+- [x] Bump `engines.node` in `package.json` to `>=22 <23`.
+- [x] Add `.nvmrc` (`22`) and document `nvm install` / `nvm use` in the README (new Requirements
+  + Install & run sections).
+- [x] Install/switch local toolchain to Node 22 (`nvm install 22` → v22.23.0, npm 10.9.8) and
+  reinstall (`rm -rf node_modules && npm install`). Native `bcrypt` rebuilt and loads under v22.
+- [x] Added a GitHub Actions CI workflow (`.github/workflows/ci.yml`) that reads the Node
+  version from `.nvmrc` and runs `npm ci && npm test` on push to master / PRs.
+- [x] Replace `new Buffer(...)` with `Buffer.from(...)` — see pre-existing issues above (4 sites).
+- [x] Smoke test on Node 22: server connected to local Mongo; `GET /` and `GET /books` → `200`;
+  `npm test` 2/2 green. (Mongo driver deprecation warnings persist — Phase 5.)
 
 ## Phase 2 — Low-risk patches & minors (quick wins)
 
@@ -187,3 +189,4 @@ breaking changes. Each phase is its own PR to keep blast radius small and bisect
 |------|-------|-------|
 | 2026-06-18 | 0 | Plan created. Baseline captured (Node 14 pinned, Node 20 installed locally; lockfileVersion 1; superagent phantom dep). |
 | 2026-06-18 | 0 | **Phase 0 complete.** Branched `chore/dependency-upgrade` off refreshed master. Clean reinstall → lockfileVersion 3, bcrypt drift fixed (4.0.1 → 5.1.1), superagent pinned as direct dep. Tests green (2/2). Audit baseline: 48 vulns (6L/24M/12H/6C). Smoke test passed against local Mongo. |
+| 2026-06-18 | 1 | **Phase 1 complete.** `engines` → `>=22 <23`; added `.nvmrc` (22), README setup docs, and CI workflow. Installed Node v22.23.0, reinstalled (bcrypt rebuilt for v22). Fixed 4 `new Buffer` → `Buffer.from`. Tests 2/2 + smoke test green on Node 22. |
