@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 'use strict';
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 

@@ -81,17 +81,19 @@ Check off boxes as you go and record notes/dates in the log at the bottom.
 - [x] Smoke test on Node 22: server connected to local Mongo; `GET /` and `GET /books` → `200`;
   `npm test` 2/2 green. (Mongo driver deprecation warnings persist — Phase 5.)
 
-## Phase 2 — Low-risk patches & minors (quick wins)
+## Phase 2 — Low-risk patches & minors (quick wins) ✅ (completed 2026-06-18)
 
-Bump together; behavior changes are minimal. Verify the server boots and logs after each.
+Bumped together; verified server boots, logs, serves `/` + `/books` (200), and the 404 path.
 
-- [ ] `cookie-parser` 1.4.4 → 1.4.7
-- [ ] `cors` 2.8.5 → 2.8.6
-- [ ] `morgan` 1.9.1 → latest 1.x
-- [ ] `debug` 2.6.9 → 4.x (API compatible; just a major version of the logger)
-- [ ] `dotenv` 8 → 17 — review: newer versions changed default quoting/expansion behavior and
-  print to stderr on missing file; confirm `.env` still loads in `lib/connectMongoose.js`.
-- [ ] `http-errors` 1.6.3 → 2.0.1 — used via `createError(404)` in `app.js`; API is stable.
+- [x] `cookie-parser` 1.4.4 → `^1.4.7`
+- [x] `cors` 2.8.5 → `^2.8.6`
+- [x] `morgan` 1.9.1 → `^1.11.0`
+- [x] `debug` 2.6.9 → `^4.4.3` (used in `bin/www`; API compatible — server boots fine)
+- [x] `dotenv` 8 → `^17.4.2`. Checked `.env`: no `#` in values (safe from the v15+ inline-comment
+  change) and keys trim correctly (`JWT_SECRET ` → `JWT_SECRET`). v17 prints a noisy
+  `injected env (12) from .env` line on boot, so added `{ quiet: true }` to both `config()`
+  call sites (`lib/connectMongoose.js`, `scripts/seed.js`) — confirmed suppressed.
+- [x] `http-errors` 1.6.3 → `^2.0.1` — `createError(404)` path returns 404 with no crash.
 
 ## Phase 3 — Test stack + real safety net (do BEFORE the risky phases)
 
@@ -190,3 +192,4 @@ breaking changes. Each phase is its own PR to keep blast radius small and bisect
 | 2026-06-18 | 0 | Plan created. Baseline captured (Node 14 pinned, Node 20 installed locally; lockfileVersion 1; superagent phantom dep). |
 | 2026-06-18 | 0 | **Phase 0 complete.** Branched `chore/dependency-upgrade` off refreshed master. Clean reinstall → lockfileVersion 3, bcrypt drift fixed (4.0.1 → 5.1.1), superagent pinned as direct dep. Tests green (2/2). Audit baseline: 48 vulns (6L/24M/12H/6C). Smoke test passed against local Mongo. |
 | 2026-06-18 | 1 | **Phase 1 complete.** `engines` → `>=22 <23`; added `.nvmrc` (22), README setup docs, and CI workflow. Installed Node v22.23.0, reinstalled (bcrypt rebuilt for v22). Fixed 4 `new Buffer` → `Buffer.from`. Tests 2/2 + smoke test green on Node 22. |
+| 2026-06-18 | 2 | **Phase 2 complete.** Bumped cookie-parser ^1.4.7, cors ^2.8.6, morgan ^1.11.0, debug ^4.4.3, dotenv ^17.4.2, http-errors ^2.0.1. Added dotenv `{ quiet: true }` to silence the v17 boot log. Tests 2/2; smoke test incl. 404 path green. |
