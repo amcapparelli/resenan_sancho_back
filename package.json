@@ -2,6 +2,9 @@
   "name": "backend",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": "14.18.3"
+  },
   "scripts": {
     "start": "node ./bin/www",
     "test": "jest tests/",
@@ -24,6 +27,7 @@
     "morgan": "~1.9.1",
     "nodemailer": "^6.4.6",
     "stripe": "^8.51.0",
+    "superagent": "^3.8.3",
     "supertest": "^4.0.2"
   }
 }
