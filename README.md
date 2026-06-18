@@ -1,3 +1,25 @@
+# Reseñan Sancho — Backend
+
+## Requirements
+
+- **Node.js 22 LTS** (see `.nvmrc`). With [nvm](https://github.com/nvm-sh/nvm):
+
+  ```bash
+  nvm install   # installs the version in .nvmrc on first run
+  nvm use       # switches to Node 22 for this project
+  ```
+
+- A MongoDB instance, with `MONGOOSE_CONNECTION_STRING` (and the other variables
+  listed in `CLAUDE.md`) set in a `.env` file.
+
+## Install & run
+
+```bash
+npm install   # install dependencies
+npm start     # start the server (defaults to port 9000)
+npm test      # run the test suite
+```
+
 # Scripts
 
 ## Seed

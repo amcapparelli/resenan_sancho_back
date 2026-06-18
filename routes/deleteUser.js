@@ -27,7 +27,7 @@ router.delete('/', verifyToken(), async (req, res, next) => {
           request
             .put(`${url}${user.email.toLowerCase()}`)
             .set('Content-Type', 'application/json;charset=utf-8')
-            .set('Authorization', 'Basic ' + new Buffer('anystring:' + mailchimpApiKey).toString('base64'))
+            .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'))
             .send({
               'email_address': user.email,
               'status': 'unsubscribed',
