@@ -35,8 +35,9 @@ Check off boxes as you go and record notes/dates in the log at the bottom.
   **not** in `package.json` — it resolved only as a transitive dep of `supertest` (a test lib)
   at `3.8.3`. Pinned it as a direct production dependency (`^3.8.3`) to preserve behavior.
   Note: superagent 3.x is deprecated — Phase 7 still tracks replacing it with Node `fetch`.
-- [ ] **Dependency classification**: `jest`, `supertest`, and `body-parser` are under
-  `dependencies` but are dev/test-only. Move to `devDependencies`.
+- [~] **Dependency classification** (Phase 3, partial): `jest` and `supertest` moved to
+  `devDependencies`. `body-parser` left in `dependencies` for now — it's only used by code being
+  removed in Phase 6, so its removal is tracked there.
 - [ ] **`jade` is deprecated**: renamed to `pug` in 2016. Only used by the boilerplate error
   view (`views/`). Migrate to `pug` or drop server-side views entirely (this is a JSON API).
 - [ ] **`body-parser` is redundant**: `app.js` already uses `express.json()` /
@@ -95,19 +96,30 @@ Bumped together; verified server boots, logs, serves `/` + `/books` (200), and t
   call sites (`lib/connectMongoose.js`, `scripts/seed.js`) — confirmed suppressed.
 - [x] `http-errors` 1.6.3 → `^2.0.1` — `createError(404)` path returns 404 with no crash.
 
-## Phase 3 — Test stack + real safety net (do BEFORE the risky phases)
+## Phase 3 — Test stack + real safety net ✅ (completed 2026-06-19)
 
 The biggest risk in this upgrade is that there are **no tests covering real routes**. Build a
 minimal safety net first so later phases have something to validate against.
 
-- [ ] Upgrade `jest` 25 → 30 and `supertest` 4 → 7. Move both to `devDependencies`.
-- [ ] Update Jest config if needed (Jest 27+ changed the default test environment to `node`,
-  which suits this API; verify `testEnvironment`).
-- [ ] Replace the placeholder `tests/app.js` car/test app with tests that import the **real**
-  `app.js`. Mock Mongoose models and external services (Stripe, Nodemailer, Mailchimp).
-- [ ] Cover the highest-value flows: `login` (JWT issue + cookie), `verifyToken` middleware,
-  `register`, `registerBook` ownership check, `paymentCheckout` promo math.
-- [ ] Add `npm test` to run green on Node 22.
+- [x] Upgrade `jest` 25 → `^30.4.2` and `supertest` 4 → `^7.2.2`; both now in `devDependencies`.
+  (supertest 7 pulls its own nested `superagent@10`; `login.js` still uses our pinned top-level
+  `superagent@3.8.3` — validating the Phase 0 pin.)
+- [x] Added explicit Jest config `"jest": { "testEnvironment": "node" }` in `package.json`.
+- [x] Removed the placeholder car/test app (`tests/app.js`, `tests/server.js`,
+  `tests/example.test.js`). New tests import the **real** `app.js` with `lib/connectMongoose`,
+  `stripe`, the Mongoose models, and `bcrypt` mocked (see `tests/helpers/modelMock.js`).
+- [x] Coverage (14 tests, all green): `verifyToken` middleware (`tests/auth.test.js`); `login`
+  success/cookie/password-stripping + bad password (`tests/login.test.js`); `register` email
+  validation + happy path (`tests/register.test.js`); `registerBook` duplicate + ownership +
+  auth (`tests/registerBook.test.js`); `paymentCheckout` auth + promo math + ownership
+  (`tests/paymentCheckout.test.js`).
+- [x] `npm test` green on Node 22 (14/14); live boot smoke test still connects + serves.
+
+**Bug found & fixed by the safety net:** `login.js` signed the JWT with a *callback* and set the
+auth cookie inside it, then called `res.json(...)` on an earlier tick — so the cookie/token were
+only delivered when the downstream `Reviewer.findOne` DB call happened to be slower than the sign
+callback (timing-dependent in prod, never delivered with the DB mocked). Switched to synchronous
+`jwt.sign(...)` so the cookie and `user.token` are set before responding. No API shape change.
 
 ## Phase 4 — Auth & security libraries
 
@@ -193,3 +205,4 @@ breaking changes. Each phase is its own PR to keep blast radius small and bisect
 | 2026-06-18 | 0 | **Phase 0 complete.** Branched `chore/dependency-upgrade` off refreshed master. Clean reinstall → lockfileVersion 3, bcrypt drift fixed (4.0.1 → 5.1.1), superagent pinned as direct dep. Tests green (2/2). Audit baseline: 48 vulns (6L/24M/12H/6C). Smoke test passed against local Mongo. |
 | 2026-06-18 | 1 | **Phase 1 complete.** `engines` → `>=22 <23`; added `.nvmrc` (22), README setup docs, and CI workflow. Installed Node v22.23.0, reinstalled (bcrypt rebuilt for v22). Fixed 4 `new Buffer` → `Buffer.from`. Tests 2/2 + smoke test green on Node 22. |
 | 2026-06-18 | 2 | **Phase 2 complete.** Bumped cookie-parser ^1.4.7, cors ^2.8.6, morgan ^1.11.0, debug ^4.4.3, dotenv ^17.4.2, http-errors ^2.0.1. Added dotenv `{ quiet: true }` to silence the v17 boot log. Tests 2/2; smoke test incl. 404 path green. |
+| 2026-06-19 | 3 | **Phase 3 complete** (branch `feature/test-stack-upgrade` off master). jest→^30, supertest→^7 (both devDeps); explicit jest node env. Replaced placeholder tests with 14 real route/middleware tests (mocked DB + services). Found & fixed a JWT-cookie race in `login.js` (callback→sync sign). 14/14 green on Node 22. |
