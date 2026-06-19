@@ -56,3 +56,9 @@ Requires a `.env` file (loaded by `dotenv` in `lib/connectMongoose.js`). Variabl
 ## Tests
 
 `tests/` currently contains a **placeholder** suite: `tests/app.js` is a throwaway Express app (a `/test` and `/car` endpoint), and `tests/example.test.js` exercises it with supertest. The real application is **not** yet covered by tests — when adding tests for actual routes, import the real `app.js` and mock Mongoose/external services rather than extending the placeholder.
+
+## Workflow de PRs
+- Al crear una pull request, aplica la skill `version-bump-backend`:
+  sube la versión en `package.json` (semver) según el tipo de cambio
+  antes de abrir la PR.
+- El bump va en la rama de la PR, nunca directo en master.
