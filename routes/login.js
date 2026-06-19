@@ -21,24 +21,19 @@ router.post('/', async function (req, res) {
     }
     let userLogged = removeKeys(user._doc, 'password');
     if (user && await bcrypt.compare(password, user.password)) {
-      jwt.sign(
+      const token = jwt.sign(
         { user: userLogged },
         process.env.JWT_SECRET,
-        { expiresIn: '1d' },
-        (err, token) => {
-          if (err) {
-            res.json({ message: 'something went wrong' });
-            return;
-          }
-          res.cookie('token', token, {
-            httpOnly: true,
-            maxAge: 1000 * 60 * 60 * 24 * 365,
-            sameSite: 'lax',
-            secure: true,
-            path: '/'
-          });
-          userLogged.token = token;
-        });
+        { expiresIn: '1d' }
+      );
+      res.cookie('token', token, {
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+        secure: true,
+        path: '/'
+      });
+      userLogged.token = token;
       const reviewer = await Reviewer.findOne({ author: user._id });
       if (user.emailAuthorListStatus) {
         const response = await request
