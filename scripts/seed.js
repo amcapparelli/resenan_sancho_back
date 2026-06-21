@@ -59,10 +59,8 @@ function randomDate(start, end) {
 }
 
 async function seed() {
-  await mongoose.connect(MONGOOSE_URI, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-  });
+  mongoose.set('strictQuery', false);
+  await mongoose.connect(MONGOOSE_URI);
   console.log('Connected to MongoDB:', mongoose.connection.name);
 
   // Wipe existing seed data
