@@ -16,7 +16,7 @@ router.get('/', async function (req, res) {
   searchText ? filters = { ...filters, $text: { $search: searchText } } : filters;
   try {
     const resultsPerPage = 20;
-    const totalElements = await Reviewer.find(filters).count();
+    const totalElements = await Reviewer.countDocuments(filters);
     const totalPages = Math.ceil(totalElements / resultsPerPage);
     const reviewers = await Reviewer
       .find(filters)

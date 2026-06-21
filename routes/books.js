@@ -16,7 +16,7 @@ router.get('/', async function (req, res) {
   );
   try {
     const resultsPerPage = 20;
-    const totalElements = await Book.find(filters).count();
+    const totalElements = await Book.countDocuments(filters);
     const totalPages = Math.ceil(totalElements / resultsPerPage);
     const books = await Book
       .find(filters)
