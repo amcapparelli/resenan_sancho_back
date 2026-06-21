@@ -18,6 +18,7 @@ router.post('/', async function (req, res) {
     const user = await User.findOne({ email });
     if (!user) {
       res.json({ success: false, message: 'No existe un usuario con ese email' });
+      return;
     }
     let userLogged = removeKeys(user._doc, 'password');
     if (user && await bcrypt.compare(password, user.password)) {
@@ -61,7 +62,7 @@ router.post('/', async function (req, res) {
 router.get('/session', function (req, res) {
   try {
     const { token } = req.cookies;
-    jwt.verify(token, process.env.JWT_SECRET, async function (err, tokenDecoded) {
+    jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] }, async function (err, tokenDecoded) {
       if (err) {
         res.json({ userSession: {} });
         return;

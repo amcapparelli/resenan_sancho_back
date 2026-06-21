@@ -63,4 +63,18 @@ describe('verifyToken middleware', () => {
     expect(res.json).toHaveBeenCalledWith({ message: 'unexpectedTokenFailure' });
     expect(next).not.toHaveBeenCalled();
   });
+
+  test('rejects a token signed with a non-HS256 algorithm (alg pinning)', async () => {
+    // Same secret, but a different algorithm than verifyToken accepts.
+    const token = jwt.sign({ user: { _id: 'u1' } }, process.env.JWT_SECRET, { algorithm: 'HS384' });
+    const req = { cookies: { token }, headers: {} };
+    const res = mockRes();
+    const next = jest.fn();
+
+    verifyToken()(req, res, next);
+    await tick();
+
+    expect(res.json).toHaveBeenCalledWith({ message: 'unexpectedTokenFailure' });
+    expect(next).not.toHaveBeenCalled();
+  });
 });

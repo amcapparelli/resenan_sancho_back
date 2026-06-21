@@ -121,15 +121,23 @@ only delivered when the downstream `Reviewer.findOne` DB call happened to be slo
 callback (timing-dependent in prod, never delivered with the DB mocked). Switched to synchronous
 `jwt.sign(...)` so the cookie and `user.token` are set before responding. No API shape change.
 
-## Phase 4 — Auth & security libraries
+## Phase 4 — Auth & security libraries ✅ (completed 2026-06-21)
 
-- [ ] `bcrypt` 5/4 → 6.0.0 — native module; requires Node 18+ (fine on 22). Forces a rebuild;
-  confirm prebuilt binaries exist for Node 22 or that build tools are present. Hashing/compare
-  API is unchanged (`models/user.js` `hashPassword`, `login.js` compare).
-- [ ] `jsonwebtoken` 8 → 9 — **breaking**: stricter defaults; pass an explicit `algorithms`
-  option to `jwt.verify` (e.g. `{ algorithms: ['HS256'] }`) in `lib/auth.js` and
-  `routes/login.js`. Review the `expiresIn` sign options (still supported). Drops Node < 12.
-- [ ] Re-run the Phase 3 auth tests.
+- [x] `bcrypt` 5 → `^6.0.0` — native module rebuilt for Node 22; `hash`/`compare` API unchanged
+  (`models/user.js` `hashPassword`, `scripts/seed.js`, `login.js` compare). bcrypt 6 verifies
+  existing `$2b$` hashes, so already-stored passwords keep working.
+- [x] `jsonwebtoken` 8 → `^9.0.3` — added an explicit `{ algorithms: ['HS256'] }` option to **all
+  three** `jwt.verify` call sites: `lib/auth.js` (`verifyToken`), `routes/login.js` (`/session`),
+  and `routes/users.js` (password-reset). `jwt.sign` keeps its HS256 default and `expiresIn`, so
+  token shape is unchanged. (Plan listed 2 verify sites; there were 3.)
+- [x] Re-ran the Phase 3 auth tests and **added a regression test** asserting a non-HS256
+  (HS384) token is now rejected — `tests/auth.test.js`. Suite green: **15/15** on Node 22.
+- [x] Live end-to-end check: re-seeded local DB (bcrypt-6 hashes) and logged in via HTTP —
+  valid login returns 200 + token cookie + password-stripped user; wrong password rejected.
+- [x] **Bug fix (found during E2E):** `POST /login` with a non-existent email responded but did
+  not `return`, then ran `removeKeys(user._doc)` on a `null` user — the resulting throw hit the
+  `catch` after headers were already sent (`ERR_HTTP_HEADERS_SENT`, crashing the request). Added
+  the missing `return`. Shipped with a fail-first regression test (`tests/login.test.js`). 16/16.
 
 ## Phase 5 — Database: Mongoose 5 → 9 (incremental)
 
@@ -206,3 +214,4 @@ breaking changes. Each phase is its own PR to keep blast radius small and bisect
 | 2026-06-18 | 1 | **Phase 1 complete.** `engines` → `>=22 <23`; added `.nvmrc` (22), README setup docs, and CI workflow. Installed Node v22.23.0, reinstalled (bcrypt rebuilt for v22). Fixed 4 `new Buffer` → `Buffer.from`. Tests 2/2 + smoke test green on Node 22. |
 | 2026-06-18 | 2 | **Phase 2 complete.** Bumped cookie-parser ^1.4.7, cors ^2.8.6, morgan ^1.11.0, debug ^4.4.3, dotenv ^17.4.2, http-errors ^2.0.1. Added dotenv `{ quiet: true }` to silence the v17 boot log. Tests 2/2; smoke test incl. 404 path green. |
 | 2026-06-19 | 3 | **Phase 3 complete** (branch `feature/test-stack-upgrade` off master). jest→^30, supertest→^7 (both devDeps); explicit jest node env. Replaced placeholder tests with 14 real route/middleware tests (mocked DB + services). Found & fixed a JWT-cookie race in `login.js` (callback→sync sign). 14/14 green on Node 22. |
+| 2026-06-21 | 4 | **Phase 4 complete** (branch `feature/auth-security-upgrade` off master). bcrypt→^6 (native rebuilt for v22), jsonwebtoken→^9 with explicit `algorithms: ['HS256']` on all 3 verify sites. Added HS384-rejection regression test (15/15). Live login E2E verified with real bcrypt/jwt. |
