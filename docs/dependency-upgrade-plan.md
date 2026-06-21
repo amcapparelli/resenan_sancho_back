@@ -139,24 +139,27 @@ callback (timing-dependent in prod, never delivered with the DB mocked). Switche
   `catch` after headers were already sent (`ERR_HTTP_HEADERS_SENT`, crashing the request). Added
   the missing `return`. Shipped with a fail-first regression test (`tests/login.test.js`). 16/16.
 
-## Phase 5 — Database: Mongoose 5 → 9 (incremental)
+## Phase 5 — Database: Mongoose 5 → 9 (incremental) ✅ (completed 2026-06-21)
 
-Highest-risk phase. **Step through one major at a time** (5→6→7→8→9), running tests between
-each, rather than jumping straight to 9.
+Highest-risk phase. Stepped through one major at a time (5→6→7→8→9), with `npm test` + seed +
+live smoke (login, `/books`, `/reviewers`) after each. One commit per major for bisectability.
 
-- [ ] **5 → 6**: Remove deprecated connect options `useNewUrlParser`, `useCreateIndex`,
-  `useFindAndModify` (and `autoIndex` handling) from `lib/connectMongoose.js` **and**
-  `scripts/seed.js` — they're no longer recognized. `strictQuery` default changed.
-- [ ] **6 → 7**: **Breaking for this repo** — the `pre('remove')` document hook in
-  `models/user.js` (which cascades deletes to `book`/`reviewer`) no longer fires;
-  `Document.prototype.remove()` was removed. Migrate to `pre('deleteOne', { document: true,
-  query: false })` (or `findOneAndDelete`) and update any call sites that delete a user. Also
-  audit callback-style queries — callbacks were removed in 7; everything must be
-  `async/await`/Promises (the codebase already mostly uses `await`).
-- [ ] **7 → 8** and **8 → 9**: review each changelog for index build and type changes; the
-  text/field indexes on `models/reviewer.js` should be re-verified.
-- [ ] Verify `npm run seed` against a local DB after each step (it uses `insertMany`,
-  `deleteMany`, and the removed connect options).
+- [x] **5 → 6** (`^6.13.9`): removed `useNewUrlParser`/`useCreateIndex` (no-ops/removed in 6)
+  from `lib/connectMongoose.js` **and** `scripts/seed.js`; set `mongoose.set('strictQuery',
+  false)` explicitly (the 7+ default) to silence the v6 transition warning. Side benefit: the
+  `useUnifiedTopology`/SDAM and `collection.count` driver warnings from Phase 0 are now gone.
+- [x] **6 → 7** (`^7.8.9`): migrated the `models/user.js` cascade from `pre('remove')` to
+  `pre('deleteOne', { document: true, query: false })` (the old hook also had a triple-`next`
+  bug and never awaited its deletes — now fixed). Converted `routes/deleteUser.js` from
+  callback `User.findOne(..., cb)` + `userDoc.remove()` to `await` + `userDoc.deleteOne()`.
+  Verified the cascade fires against a local DB. Per code review: guarded the Mailchimp
+  `.end()` callback against transport errors (undefined `response`) and removed double-responses
+  (`res.json` then `next`). No other callback-style Mongoose queries existed.
+- [x] **7 → 8** (`^8.24.0`): replaced the deprecated `Query.prototype.count()` in
+  `routes/books.js` and `routes/reviewers.js` with `countDocuments()`.
+- [x] **8 → 9** (`^9.7.1`): no further code changes needed. Reviewer text/field indexes
+  re-verified (`/reviewers` 200), seed + login + `/books` all green; clean boot log on Node 22.
+- [x] `npm run seed` verified against a local DB after each step.
 
 ## Phase 6 — Express 4 → 5
 
@@ -215,3 +218,4 @@ breaking changes. Each phase is its own PR to keep blast radius small and bisect
 | 2026-06-18 | 2 | **Phase 2 complete.** Bumped cookie-parser ^1.4.7, cors ^2.8.6, morgan ^1.11.0, debug ^4.4.3, dotenv ^17.4.2, http-errors ^2.0.1. Added dotenv `{ quiet: true }` to silence the v17 boot log. Tests 2/2; smoke test incl. 404 path green. |
 | 2026-06-19 | 3 | **Phase 3 complete** (branch `feature/test-stack-upgrade` off master). jest→^30, supertest→^7 (both devDeps); explicit jest node env. Replaced placeholder tests with 14 real route/middleware tests (mocked DB + services). Found & fixed a JWT-cookie race in `login.js` (callback→sync sign). 14/14 green on Node 22. |
 | 2026-06-21 | 4 | **Phase 4 complete** (branch `feature/auth-security-upgrade` off master). bcrypt→^6 (native rebuilt for v22), jsonwebtoken→^9 with explicit `algorithms: ['HS256']` on all 3 verify sites. Added HS384-rejection regression test (15/15). Live login E2E verified with real bcrypt/jwt. |
+| 2026-06-21 | 5 | **Phase 5 complete** (branch `feature/mongoose-upgrade` off master). Mongoose 5→6→7→8→9 (`^9.7.1`), one commit per major. Removed dead connect opts + set strictQuery; migrated cascade to `pre('deleteOne')` doc hook; deleteUser → async/await + `deleteOne()`; `.count()` → `countDocuments()`. backend-node-reviewer caught a Mailchimp `.end()` crash path + double-response, both fixed. 16/16 tests + seed + smoke green after each step. |
