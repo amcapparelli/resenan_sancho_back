@@ -55,7 +55,7 @@ router.post('/reset/:token/:userId', async function (req, res) {
     const user = await User.findOne({ _id: userId });
     const secret = user.password + '-' + user.created_at;
     let userRequesting;
-    jwt.verify(token, secret, (err, authData) => {
+    jwt.verify(token, secret, { algorithms: ['HS256'] }, (err, authData) => {
       if (err) {
         res.json({ message: 'token expired' });
       } else {
