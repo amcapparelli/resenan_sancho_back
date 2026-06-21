@@ -37,10 +37,12 @@ UserSchema.statics.hashPassword = (plainPassword) => {
   return bcrypt.hash(plainPassword, 14);
 };
 
-UserSchema.pre('remove', function (next) {
-  this.model('book').deleteMany({ author: this._id }, next);
-  this.model('reviewer').deleteMany({ author: this._id }, next);
-  next();
+// Cascade-delete a user's books and reviewer profile. Mongoose 7 removed
+// Document.prototype.remove(), so this is document middleware on deleteOne()
+// (triggered by `userDoc.deleteOne()`), not the old 'remove' hook.
+UserSchema.pre('deleteOne', { document: true, query: false }, async function () {
+  await this.model('book').deleteMany({ author: this._id });
+  await this.model('reviewer').deleteMany({ author: this._id });
 });
 
 module.exports = mongoose.model('user', UserSchema);
