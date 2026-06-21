@@ -8,9 +8,6 @@ var cors = require('cors');
 var app = express();
 require('./lib/connectMongoose');
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
 app.use(cors({
   credentials: true,
   origin: process.env.FRONTEND_URL
@@ -29,15 +26,15 @@ app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// error handler
-app.use(function (err, req, res) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
+// error handler (JSON API: respond with JSON, not a rendered view).
+// Must declare all 4 args so Express registers it as an error handler.
+// eslint-disable-next-line no-unused-vars
+app.use(function (err, req, res, next) {
   res.status(err.status || 500);
-  res.render('error');
+  res.json({
+    message: err.message,
+    error: req.app.get('env') === 'development' ? err : {}
+  });
 });
 
 module.exports = app;

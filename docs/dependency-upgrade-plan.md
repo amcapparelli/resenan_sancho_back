@@ -38,15 +38,17 @@ Check off boxes as you go and record notes/dates in the log at the bottom.
 - [~] **Dependency classification** (Phase 3, partial): `jest` and `supertest` moved to
   `devDependencies`. `body-parser` left in `dependencies` for now — it's only used by code being
   removed in Phase 6, so its removal is tracked there.
-- [ ] **`jade` is deprecated**: renamed to `pug` in 2016. Only used by the boilerplate error
-  view (`views/`). Migrate to `pug` or drop server-side views entirely (this is a JSON API).
-- [ ] **`body-parser` is redundant**: `app.js` already uses `express.json()` /
-  `express.urlencoded()`. `body-parser` is only used by the throwaway `tests/app.js`. Remove
-  once tests are reworked.
-- [ ] **Latent bug — error handler is not registered**: `app.js` declares
+- [x] **`jade` is deprecated** (Phase 6): renamed to `pug` in 2016. It was only used by the
+  boilerplate `views/` (home + error). Dropped server-side views entirely (this is a JSON API):
+  removed the view-engine setup, deleted `views/`, and uninstalled `jade`.
+- [x] **`body-parser` is redundant** (Phase 6): `app.js` already uses `express.json()` /
+  `express.urlencoded()`. After the placeholder `tests/app.js` was removed in Phase 3 it had
+  **zero** code references, so it was uninstalled.
+- [x] **Latent bug — error handler is not registered** (Phase 6): `app.js` declared
   `app.use(function (err, req, res) {...})` with only **3 args**. Express only recognizes an
-  error handler when it has **4 args** (`err, req, res, next`). As written it's treated as
-  normal middleware and never runs on errors. Fix during the Express phase.
+  error handler when it has **4 args** (`err, req, res, next`). As written it was treated as
+  normal middleware and never ran on errors. Fixed (now 4 args, responds with JSON), with a
+  fail-first regression test (`tests/app.test.js`).
 - [x] **Deprecated `Buffer`** (Phase 1): replaced `new Buffer(...)` with `Buffer.from(...)`.
   Found in 4 places, not 1: `routes/login.js`, `routes/deleteUser.js`, and `routes/suscribeAuthor.js` (×2).
 - [x] **node_modules / lockfile drift** (Phase 0): installed `bcrypt` (4.0.1) ≠ declared
@@ -161,20 +163,28 @@ live smoke (login, `/books`, `/reviewers`) after each. One commit per major for 
   re-verified (`/reviewers` 200), seed + login + `/books` all green; clean boot log on Node 22.
 - [x] `npm run seed` verified against a local DB after each step.
 
-## Phase 6 — Express 4 → 5
+## Phase 6 — Express 4 → 5 ✅ (completed 2026-06-21)
 
-- [ ] Upgrade `express` 4.16 → 5.x.
-- [ ] **Fix the error handler** (see latent bug above): change to
-  `app.use(function (err, req, res, next) {...})` so Express registers it.
-- [ ] Review routing: Express 5 uses `path-to-regexp@8` (named wildcards, no bare `*`),
-  removed `app.del`, `req.param(name)`, and changed some `res`/`req` behaviors. The route
-  files here use plain string paths and `:id` params, which are compatible, but verify
-  `routes/registerBook.js` (`/:id`) and the `router.js` mounts.
-- [ ] Decide on `jade`/views: migrate the error view to `pug` **or** replace `res.render`
-  in the 404/error handlers with JSON responses (preferred for a pure API) and drop `jade`
-  + the `views/` setup.
-- [ ] Remove `body-parser` from dependencies once `tests/app.js` no longer uses it.
-- [ ] Full smoke test of every mounted route in `routes/router.js`.
+- [x] Upgrade `express` 4.16 → `^5` (installed 5.2.1).
+- [x] **Fixed the error handler** (latent bug above): now
+  `app.use(function (err, req, res, next) {...})` — 4 args, so Express registers it. Responds
+  with JSON (`{ message, error }`) instead of rendering a view. Locked down by a fail-first
+  regression test in `tests/app.test.js` (unknown route → JSON 404; verified it fails on the
+  3-arg handler, which falls through to Express's default `text/html` 404).
+- [x] Reviewed routing for Express 5 / `path-to-regexp@8`: grepped for `req.param(`, `app.del`,
+  `res.sendfile`, status-first `res.json(obj, status)`, `req.host`, and bare `*` wildcards —
+  **none present**. All routes use plain string paths + `:id` params (`registerBook` `/:id`,
+  `book` `/private/:id`, `promotions`/`reviewer`/etc.), which are compatible. `router.js` mounts
+  unchanged.
+- [x] Dropped `jade`/views: this is a pure JSON API, so replaced `res.render` in both call sites
+  with JSON — `routes/index.js` (`GET /` → `{ name, status: 'ok' }`) and the error handler.
+  Removed the view-engine setup from `app.js`, deleted `views/`, uninstalled `jade`.
+- [x] Removed `body-parser` from dependencies (zero code references after Phase 3).
+- [x] Full smoke test on Node 22 against local Mongo: `GET /` (JSON ok), `/books` (200),
+  `/reviewers` (200), `GET /promotions` → JSON 404 (route only defines `PUT /:id`, expected),
+  and an unknown path → JSON 404. Clean boot log. `npm test` 18/18 green.
+- [x] `npm audit` dropped from the Phase 0 baseline of 48 to **19** after removing jade's
+  transitive tree and upgrading Express (full audit reconciliation tracked in Phase 8).
 
 ## Phase 7 — Integrations (Stripe, Nodemailer, Mailchimp)
 
@@ -219,3 +229,4 @@ breaking changes. Each phase is its own PR to keep blast radius small and bisect
 | 2026-06-19 | 3 | **Phase 3 complete** (branch `feature/test-stack-upgrade` off master). jest→^30, supertest→^7 (both devDeps); explicit jest node env. Replaced placeholder tests with 14 real route/middleware tests (mocked DB + services). Found & fixed a JWT-cookie race in `login.js` (callback→sync sign). 14/14 green on Node 22. |
 | 2026-06-21 | 4 | **Phase 4 complete** (branch `feature/auth-security-upgrade` off master). bcrypt→^6 (native rebuilt for v22), jsonwebtoken→^9 with explicit `algorithms: ['HS256']` on all 3 verify sites. Added HS384-rejection regression test (15/15). Live login E2E verified with real bcrypt/jwt. |
 | 2026-06-21 | 5 | **Phase 5 complete** (branch `feature/mongoose-upgrade` off master). Mongoose 5→6→7→8→9 (`^9.7.1`), one commit per major. Removed dead connect opts + set strictQuery; migrated cascade to `pre('deleteOne')` doc hook; deleteUser → async/await + `deleteOne()`; `.count()` → `countDocuments()`. backend-node-reviewer caught a Mailchimp `.end()` crash path + double-response, both fixed. 16/16 tests + seed + smoke green after each step. |
+| 2026-06-21 | 6 | **Phase 6 complete** (branch `feature/express-5-upgrade` off master). express 4.16 → ^5 (5.2.1). Fixed the latent 3-arg error handler (→ 4 args, JSON response) + fail-first regression test. Dropped server-side views: `res.render` → JSON in `routes/index.js` and the error handler; deleted `views/`, uninstalled `jade`. Removed unused `body-parser`. Route audit: no Express-5 breaking patterns. 18/18 tests; live smoke (`/`, `/books`, `/reviewers`, JSON 404) green. Audit 48 → 19. |
