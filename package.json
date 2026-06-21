@@ -24,7 +24,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.1",
     "morgan": "^1.11.0",
-    "nodemailer": "^6.4.6",
+    "nodemailer": "^9.0.1",
     "stripe": "^8.51.0",
     "superagent": "^3.8.3"
   },
