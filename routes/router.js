@@ -19,6 +19,7 @@ const reviewersRouter = require('./reviewers');
 const suscribeAuthorRouter = require('./suscribeAuthor');
 const updateRouter = require('./update');
 const usersRouter = require('./users');
+const versionRouter = require('./version');
 
 // Router class
 class Router {
@@ -40,6 +41,7 @@ class Router {
     app.use(namedRoutes.suscribeAuthor, suscribeAuthorRouter);
     app.use(namedRoutes.update, updateRouter);
     app.use(namedRoutes.users, usersRouter);
+    app.use(namedRoutes.version, versionRouter);
   }
 }
 
