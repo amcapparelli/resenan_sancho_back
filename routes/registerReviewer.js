@@ -156,8 +156,14 @@ router.put('/', verifyToken(), async (req, res) => {
     const userCountry = user.country ? user.country : 'N/A';
     const subscriberHash = crypto.createHash('md5').update(user.email.toLowerCase()).digest('hex');
     // Read the member's current subscription status so the PUT (an upsert)
-    // preserves it while updating the merge fields.
+    // preserves it while updating the merge fields. Unlike superagent, fetch
+    // does not throw on a 404, and a non-2xx Mailchimp body's `status` is a
+    // numeric HTTP code — never send that back as a subscription status.
     const getResponse = await fetch(`${url}${subscriberHash}`, { headers: mailchimpHeaders });
+    if (!getResponse.ok) {
+      res.json({ success: false, message: 'no se pudo guardar los cambios' });
+      return;
+    }
     const member = await getResponse.json();
 
     const putResponse = await fetch(`${url}${subscriberHash}`, {
