@@ -46,7 +46,12 @@ describe('POST /paymentCheckout', () => {
       .send({ author: 'owner1', id: 'pm_card', chosenPromo: 2, bookId: 'b1' });
 
     expect(stripe.__create).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 990, currency: 'EUR', confirm: true })
+      expect.objectContaining({
+        amount: 990,
+        currency: 'EUR',
+        confirm: true,
+        automatic_payment_methods: { enabled: true, allow_redirects: 'never' }
+      })
     );
     expect(Book.updateOne).toHaveBeenCalledWith({ _id: 'b1' }, expect.objectContaining({ copies: 5 }));
     expect(res.body.success).toBe(true);
