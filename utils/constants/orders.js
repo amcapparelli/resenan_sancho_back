@@ -1,0 +1,4 @@
+const ORDER_COOLDOWN_HOURS = 24;
+const MS_PER_HOUR = 1000 * 60 * 60;
+
+module.exports = { ORDER_COOLDOWN_HOURS, MS_PER_HOUR };

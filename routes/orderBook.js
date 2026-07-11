@@ -7,6 +7,7 @@ const {
   transporter,
   bookCopyRequestTemplate
 } = require('../lib/email');
+const { ORDER_COOLDOWN_HOURS, MS_PER_HOUR } = require('../utils/constants/orders');
 
 router.post('/', verifyToken(), async function (req, res) {
   try {
@@ -38,6 +39,20 @@ router.post('/', verifyToken(), async function (req, res) {
       return;
     }
 
+    // Verify the reviewer hasn't ordered another book within the cooldown window
+    const reviewerUser = await User.findOne({ _id: reviewer });
+    if (reviewerUser && reviewerUser.lastBookOrderAt) {
+      const hoursSince = (Date.now() - reviewerUser.lastBookOrderAt.getTime()) / MS_PER_HOUR;
+      if (hoursSince < ORDER_COOLDOWN_HOURS) {
+        const hoursLeft = Math.ceil(ORDER_COOLDOWN_HOURS - hoursSince);
+        res.json({
+          success: false,
+          message: `Ya has solicitado un libro recientemente, debes esperar ${hoursLeft} horas para poder solicitar otro`
+        });
+        return;
+      }
+    }
+
     //Send email to author
     const author = await User.findOne({ _id: book.author });
     const emailTemplate = bookCopyRequestTemplate(message, author.email, user.email, book.title, book.copies - 1);
@@ -56,6 +71,9 @@ router.post('/', verifyToken(), async function (req, res) {
       { _id },
       { $addToSet: { reviewersOrders: reviewer }, $inc: { copies: -1 } }
     );
+
+    // Record the order time to enforce the cooldown on the next request
+    await User.updateOne({ _id: reviewer }, { lastBookOrderAt: new Date() });
 
     res.json({ success: true, message: 'Enhorabuena, el ejemplar ha sido solicitado a su autor.' });
   } catch (error) {
