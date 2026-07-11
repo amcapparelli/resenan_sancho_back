@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 process.env.JWT_SECRET = 'test-secret';
 
 const jwt = require('jsonwebtoken');

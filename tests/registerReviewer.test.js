@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 process.env.JWT_SECRET = 'test-secret';
 // registerReviewer builds the Mailchimp URL from these at module load.
 process.env.MAIL_CHIMP_INSTANCE = 'us1';

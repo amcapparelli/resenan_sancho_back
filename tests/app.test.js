@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 process.env.JWT_SECRET = 'test-secret';
 
 // app.js wires up Mongoose at require time; keep it from touching a real DB.
