@@ -214,14 +214,37 @@ Three independent sub-phases, one commit each.
   "usuario borrado" without deleting when the Mailchimp unsubscribe fails.
 - [x] `npm test` 18/18 green; live server boot + `/`, `/books`, `/reviewers` all 200.
 
-## Phase 8 — Final cleanup & verification
+## Phase 8 — Final cleanup & verification ✅ (completed 2026-07-11)
 
-- [ ] Confirm `dependencies` vs `devDependencies` split is correct.
-- [ ] `npm audit` — compare against the Phase 0 baseline; address remaining advisories.
-- [ ] `npx eslint .` clean (consider bumping ESLint config to a current `ecmaVersion`).
-- [ ] Update `README.md` / `CLAUDE.md`: Node 22 requirement, `.nvmrc`, any changed env/setup.
-- [ ] Full regression: `npm test`, `npm run seed` (local), `npm start` + manual route smoke.
-- [ ] Squash/curate commits per phase and open the PR.
+- [x] **Dependency split confirmed correct.** All runtime deps in `dependencies`; only
+  `jest`, `supertest`, and the new ESLint stack in `devDependencies`. `jade`, `body-parser`,
+  and `superagent` are all gone (removed in Phases 6–7); no phantom deps remain.
+- [x] **`npm audit`: 48 → 0.** The Phase 0 baseline was 48 (6L/24M/12H/6C). The only remaining
+  advisory was a dev-only transitive `js-yaml` DoS (via `jest` → `babel-plugin-istanbul`),
+  resolved with a non-breaking `npm audit fix`. **0 vulnerabilities.**
+- [x] **ESLint wired up.** Added `eslint@9` + `@eslint/js` + `globals` (devDeps) with a flat
+  `eslint.config.js` (ESLint 9's format) mirroring the old `.eslintrc.json` rules
+  (`eslint:recommended` + 2-space indent, single quotes, semicolons; `ecmaVersion` 2022).
+  Removed the legacy `.eslintrc.json`, added an `npm run lint` script, and wired `npm run lint`
+  into CI. `eslint .` is **clean (0 problems)** — also removed now-dead `eslint-disable`
+  directives the flat config's node/jest globals made unnecessary.
+- [x] **Docs refreshed.** `README.md` already carried the Node 22 setup (Phase 1); updated
+  `CLAUDE.md` for the modernized stack (Node 22, Express 5 + JSON error handler, Mongoose
+  `pre('deleteOne')`, Stripe apiVersion/`automatic_payment_methods`, Mailchimp via `fetch`,
+  and a rewritten Tests section describing the real suite).
+- [x] **Full regression green.** `npm run lint` clean; `npm test` **20/20**; `npm run seed`
+  against local Mongo (10 users / 15 books / 6 reviewers); clean `npm start` boot + live smoke
+  (`/`, `/books`, `/reviewers` → 200 JSON; real seeded login → token cookie + password stripped;
+  wrong password → `credenciales incorrectas`).
+
+### Known issues deferred (out of scope for this upgrade; good follow-up tickets)
+
+- `routes/registerReviewer.js`: POST/PUT don't treat Mailchimp HTTP 400 as success like the
+  other three callers, and their `catch { res.json(error) }` leaks a raw error as an empty 200
+  body.
+- `routes/deleteUser.js`: on a failed Mailchimp unsubscribe it responds "usuario borrado"
+  without actually deleting the user.
+- `routes/paymentCheckout.js`: no Stripe idempotency key on `paymentIntents.create`.
 
 ---
 
@@ -243,4 +266,5 @@ breaking changes. Each phase is its own PR to keep blast radius small and bisect
 | 2026-06-21 | 4 | **Phase 4 complete** (branch `feature/auth-security-upgrade` off master). bcrypt→^6 (native rebuilt for v22), jsonwebtoken→^9 with explicit `algorithms: ['HS256']` on all 3 verify sites. Added HS384-rejection regression test (15/15). Live login E2E verified with real bcrypt/jwt. |
 | 2026-06-21 | 5 | **Phase 5 complete** (branch `feature/mongoose-upgrade` off master). Mongoose 5→6→7→8→9 (`^9.7.1`), one commit per major. Removed dead connect opts + set strictQuery; migrated cascade to `pre('deleteOne')` doc hook; deleteUser → async/await + `deleteOne()`; `.count()` → `countDocuments()`. backend-node-reviewer caught a Mailchimp `.end()` crash path + double-response, both fixed. 16/16 tests + seed + smoke green after each step. |
 | 2026-06-21 | 6 | **Phase 6 complete** (branch `feature/express-5-upgrade` off master). express 4.16 → ^5 (5.2.1). Fixed the latent 3-arg error handler (→ 4 args, JSON response) + fail-first regression test. Dropped server-side views: `res.render` → JSON in `routes/index.js` and the error handler; deleted `views/`, uninstalled `jade`. Removed unused `body-parser`. Route audit: no Express-5 breaking patterns. 18/18 tests; live smoke (`/`, `/books`, `/reviewers`, JSON 404) green. Audit 48 → 19. |
-| 2026-06-21 | 7 | **Phase 7 complete** (branch `feature/integrations-upgrade` off master). 3 commits. stripe 8 → ^22 (pinned apiVersion; fixed `confirm:true` → added `automatic_payment_methods {allow_redirects:'never'}`, verified live in Stripe test mode). nodemailer 6 → ^9 (SMTP auth verified via `.verify()`; fixed stray `;` in all 4 email templates). Mailchimp superagent → native `fetch` in 4 route files, removed superagent dep (read path verified live against both lists). 18/18 tests + boot smoke green. |
+| 2026-06-21 | 7 | **Phase 7 complete** (branch `feature/integrations-upgrade` off master). 3 commits. stripe 8 → ^22 (pinned apiVersion; fixed `confirm:true` → added `automatic_payment_methods {allow_redirects:'never'}`, verified live in Stripe test mode). nodemailer 6 → ^9 (SMTP auth verified via `.verify()`; fixed stray `;` in all 4 email templates). Mailchimp superagent → native `fetch` in 4 route files, removed superagent dep (read path verified live against both lists). backend-node-reviewer caught a numeric-status regression in `registerReviewer` PUT; fixed + fail-first test. 20/20 tests + boot smoke green. |
+| 2026-07-11 | 8 | **Phase 8 complete** (branch `chore/final-cleanup` off master). Wired up ESLint 9 (flat `eslint.config.js`, removed legacy `.eslintrc.json`, `npm run lint`, CI lint step); `eslint .` clean. Resolved the last audit advisory (dev-only js-yaml) → **audit 48 → 0**. Refreshed `CLAUDE.md` for the modernized stack. Full regression: lint clean, 20/20 tests, seed + live login smoke green. Deferred 3 pre-existing bugs as follow-up tickets. **Upgrade complete: Node 14 → 22, all core libs current.** |

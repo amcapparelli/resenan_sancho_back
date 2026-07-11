@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 process.env.JWT_SECRET = 'test-secret';
 
 // Block side effects at import time: no real DB connection, no real Stripe client.
