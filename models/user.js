@@ -30,7 +30,8 @@ const UserSchema = Schema({
   },
   avatar: String,
   resetPasswordToken: String,
-  resetPasswordExpires: Date
+  resetPasswordExpires: Date,
+  lastBookOrderAt: Date
 });
 
 UserSchema.statics.hashPassword = (plainPassword) => {
