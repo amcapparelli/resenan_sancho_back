@@ -186,20 +186,33 @@ live smoke (login, `/books`, `/reviewers`) after each. One commit per major for 
 - [x] `npm audit` dropped from the Phase 0 baseline of 48 to **19** after removing jade's
   transitive tree and upgrading Express (full audit reconciliation tracked in Phase 8).
 
-## Phase 7 — Integrations (Stripe, Nodemailer, Mailchimp)
+## Phase 7 — Integrations (Stripe, Nodemailer, Mailchimp) ✅ (completed 2026-06-21)
 
-- [ ] `stripe` 8 → 22 — **largest API jump**. Pin an `apiVersion` when constructing the client:
-  `require('stripe')(key, { apiVersion: '2025-...' })`. Re-verify
-  `paymentIntents.create({ amount, currency, payment_method, confirm: true })` in
-  `routes/paymentCheckout.js` against the current API (the `confirm`/`payment_method` flow and
-  error shapes changed across versions). Test with Stripe test keys.
-- [ ] `nodemailer` 6 → 9 — `createTransport` config and the template-send flow in
-  `lib/email.js` are broadly compatible; verify SMTP auth options and run a real send to a
-  test inbox. Note: the HTML templates in `lib/email.js` start with a stray `` ;`` after the
-  backtick — clean up while here.
-- [ ] Mailchimp call in `routes/login.js`: now that `superagent` is explicit (Phase 0),
-  either keep it pinned or replace with Node's built-in `fetch`. Verify the
-  `Authorization: Basic` header and member-status sync still work.
+Three independent sub-phases, one commit each.
+
+- [x] **`stripe` 8 → 22** (22.3.1). Pinned `apiVersion: '2026-06-24.dahlia'` (the version the
+  v22 SDK targets) so an SDK bump never silently changes behavior via the account default.
+  **Breaking change confirmed & fixed:** under the pinned API, `paymentIntents.create` with a
+  bare `confirm: true` errors (`"...you must provide a return_url"`) because the account has
+  dashboard-enabled redirect-capable methods. Added
+  `automatic_payment_methods: { enabled: true, allow_redirects: 'never' }` — verified live
+  against **Stripe test mode** (`pm_card_visa` → status `succeeded`). Updated the
+  `paymentCheckout` test to assert the new option.
+- [x] **`nodemailer` 6 → 9** (9.0.3). `createTransport`/`sendMail` API unchanged; **SMTP auth
+  verified live** via `transporter.verify()` (no outbound send). Fixed a long-standing bug:
+  every HTML template opened with `` `; `` (backtick + literal semicolon), so each email body
+  started with a stray `;` — removed from all four templates in `lib/email.js`.
+- [x] **Mailchimp: `superagent` → native `fetch`** across all four callers (`login.js`,
+  `suscribeAuthor.js`, `deleteUser.js`, `registerReviewer.js`); removed the deprecated
+  `superagent` dependency (Node 22 ships a global `fetch`). Preserved the Basic-auth header,
+  JSON bodies, and the "treat 400 as success" semantics. **Read path verified live** against
+  both real lists (GET → 200; 94 writers / 502 readers). Robustness gains: the login status
+  sync can no longer abort login on a Mailchimp outage (guarded on `response.ok`, so a numeric
+  error `status` is never persisted); `deleteUser`/`suscribeAuthor` fetches now live inside the
+  existing try/catch (no detached `.end()` callbacks); dropped a stray debug `console.log` in
+  `registerReviewer`. **Pre-existing bug left for a later pass:** `deleteUser` still reports
+  "usuario borrado" without deleting when the Mailchimp unsubscribe fails.
+- [x] `npm test` 18/18 green; live server boot + `/`, `/books`, `/reviewers` all 200.
 
 ## Phase 8 — Final cleanup & verification
 
@@ -230,3 +243,4 @@ breaking changes. Each phase is its own PR to keep blast radius small and bisect
 | 2026-06-21 | 4 | **Phase 4 complete** (branch `feature/auth-security-upgrade` off master). bcrypt→^6 (native rebuilt for v22), jsonwebtoken→^9 with explicit `algorithms: ['HS256']` on all 3 verify sites. Added HS384-rejection regression test (15/15). Live login E2E verified with real bcrypt/jwt. |
 | 2026-06-21 | 5 | **Phase 5 complete** (branch `feature/mongoose-upgrade` off master). Mongoose 5→6→7→8→9 (`^9.7.1`), one commit per major. Removed dead connect opts + set strictQuery; migrated cascade to `pre('deleteOne')` doc hook; deleteUser → async/await + `deleteOne()`; `.count()` → `countDocuments()`. backend-node-reviewer caught a Mailchimp `.end()` crash path + double-response, both fixed. 16/16 tests + seed + smoke green after each step. |
 | 2026-06-21 | 6 | **Phase 6 complete** (branch `feature/express-5-upgrade` off master). express 4.16 → ^5 (5.2.1). Fixed the latent 3-arg error handler (→ 4 args, JSON response) + fail-first regression test. Dropped server-side views: `res.render` → JSON in `routes/index.js` and the error handler; deleted `views/`, uninstalled `jade`. Removed unused `body-parser`. Route audit: no Express-5 breaking patterns. 18/18 tests; live smoke (`/`, `/books`, `/reviewers`, JSON 404) green. Audit 48 → 19. |
+| 2026-06-21 | 7 | **Phase 7 complete** (branch `feature/integrations-upgrade` off master). 3 commits. stripe 8 → ^22 (pinned apiVersion; fixed `confirm:true` → added `automatic_payment_methods {allow_redirects:'never'}`, verified live in Stripe test mode). nodemailer 6 → ^9 (SMTP auth verified via `.verify()`; fixed stray `;` in all 4 email templates). Mailchimp superagent → native `fetch` in 4 route files, removed superagent dep (read path verified live against both lists). 18/18 tests + boot smoke green. |

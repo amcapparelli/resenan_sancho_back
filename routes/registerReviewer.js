@@ -2,7 +2,6 @@
 
 const express = require('express');
 const router = express.Router();
-var request = require('superagent');
 const crypto = require('crypto');
 const Reviewer = require('../models/reviewer');
 const User = require('../models/user');
@@ -12,6 +11,10 @@ const mailchimpInstance = process.env.MAIL_CHIMP_INSTANCE;
 const listUniqueId = process.env.LIST_UNIQUE_ID;
 const url = `https://${mailchimpInstance}.api.mailchimp.com/3.0/lists/${listUniqueId}/members/`;
 const mailchimpApiKey = process.env.MAIL_CHIMP_API_KEY;
+const mailchimpHeaders = {
+  'Content-Type': 'application/json;charset=utf-8',
+  'Authorization': 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64')
+};
 
 const genresMapper = [
   { name: 'adventure', code: 'ADV' },
@@ -79,11 +82,10 @@ router.post('/', async function (req, res) {
     const formatsForMailchimp = formatsMapper.reduce((acum, curr) => (
       formats.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
     const userCountry = user.country ? user.country : 'N/A';
-    request
-      .post(url)
-      .set('Content-Type', 'application/json;charset=utf-8')
-      .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'))
-      .send({
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: mailchimpHeaders,
+      body: JSON.stringify({
         'email_address': user.email,
         'status': 'subscribed',
         'merge_fields': {
@@ -93,18 +95,16 @@ router.post('/', async function (req, res) {
           ...formatsForMailchimp
         }
       })
-      .end(function (err, response) {
-        console.log("responseeeeeeeee", err, response.status, response.text)
-        if (!err && response && response.status >= 200 && response.status < 300) {
-          res.json({
-            success: true,
-            message: '¡Enhorabuena! Tu perfil de reseñadora literaria fue dado de alta.',
-            reviewer: newReviewer
-          });
-        } else {
-          res.json({ success: false, message: 'no se pudo guardar algunos cambios.' });
-        }
+    });
+    if (response.status >= 200 && response.status < 300) {
+      res.json({
+        success: true,
+        message: '¡Enhorabuena! Tu perfil de reseñadora literaria fue dado de alta.',
+        reviewer: newReviewer
       });
+    } else {
+      res.json({ success: false, message: 'no se pudo guardar algunos cambios.' });
+    }
   } catch (error) {
     res.json(error);
   }
@@ -155,18 +155,23 @@ router.put('/', verifyToken(), async (req, res) => {
       formats.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
     const userCountry = user.country ? user.country : 'N/A';
     const subscriberHash = crypto.createHash('md5').update(user.email.toLowerCase()).digest('hex');
-    const response = await request
-      .get(`${url}${subscriberHash}`)
-      .set('Content-Type', 'application/json;charset=utf-8')
-      .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'));
+    // Read the member's current subscription status so the PUT (an upsert)
+    // preserves it while updating the merge fields. Unlike superagent, fetch
+    // does not throw on a 404, and a non-2xx Mailchimp body's `status` is a
+    // numeric HTTP code — never send that back as a subscription status.
+    const getResponse = await fetch(`${url}${subscriberHash}`, { headers: mailchimpHeaders });
+    if (!getResponse.ok) {
+      res.json({ success: false, message: 'no se pudo guardar los cambios' });
+      return;
+    }
+    const member = await getResponse.json();
 
-    request
-      .put(`${url}${subscriberHash}`)
-      .set('Content-Type', 'application/json;charset=utf-8')
-      .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'))
-      .send({
+    const putResponse = await fetch(`${url}${subscriberHash}`, {
+      method: 'PUT',
+      headers: mailchimpHeaders,
+      body: JSON.stringify({
         'email_address': user.email,
-        'status': response.body.status,
+        'status': member.status,
         'merge_fields': {
           'FNAME': user.name,
           'PAIS': userCountry,
@@ -174,13 +179,12 @@ router.put('/', verifyToken(), async (req, res) => {
           ...formatsForMailchimp,
         }
       })
-      .end(function (err, response) {
-        if (!err && response && response.status >= 200 && response.status < 300) {
-          res.json({ success: true, message: '¡Has actualizado tu perfil de reseñadora literaria correctamente!', reviewer: reviewerUpdated });
-        } else {
-          res.json({ success: false, message: 'no se pudo guardar los cambios' });
-        }
-      });
+    });
+    if (putResponse.status >= 200 && putResponse.status < 300) {
+      res.json({ success: true, message: '¡Has actualizado tu perfil de reseñadora literaria correctamente!', reviewer: reviewerUpdated });
+    } else {
+      res.json({ success: false, message: 'no se pudo guardar los cambios' });
+    }
   } catch (error) {
     res.json(error);
   }

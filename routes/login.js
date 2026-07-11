@@ -1,7 +1,6 @@
 const express = require('express');
 var jwt = require('jsonwebtoken');
 const router = express.Router();
-var request = require('superagent');
 const User = require('../models/user');
 const Reviewer = require('../models/reviewer');
 const bcrypt = require('bcrypt');
@@ -11,6 +10,7 @@ const mailchimpInstance = process.env.MAIL_CHIMP_INSTANCE;
 const listUniqueId = process.env.WRITERS_LIST_UNIQUE_ID;
 const url = `https://${mailchimpInstance}.api.mailchimp.com/3.0/lists/${listUniqueId}/members/`;
 const mailchimpApiKey = process.env.MAIL_CHIMP_API_KEY;
+const authHeader = 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64');
 
 router.post('/', async function (req, res) {
   try {
@@ -37,13 +37,26 @@ router.post('/', async function (req, res) {
       userLogged.token = token;
       const reviewer = await Reviewer.findOne({ author: user._id });
       if (user.emailAuthorListStatus) {
-        const response = await request
-          .get(`${url}${user.email.toLowerCase()}`)
-          .set('Content-Type', 'application/json;charset=utf-8')
-          .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'));
-        if (response.body.status !== user.emailAuthorListStatus) {
-          await User.updateOne({ _id: user._id }, { emailAuthorListStatus: response.body.status });
-          userLogged.emailAuthorListStatus = response.body.status;
+        // Sync the author's Mailchimp subscription status. A failed lookup must
+        // never block login, so guard on response.ok and swallow errors: on a
+        // non-2xx Mailchimp response the body's `status` is a numeric HTTP code,
+        // not a subscription string, and must not be persisted.
+        try {
+          const response = await fetch(`${url}${user.email.toLowerCase()}`, {
+            headers: {
+              'Content-Type': 'application/json;charset=utf-8',
+              'Authorization': authHeader
+            }
+          });
+          if (response.ok) {
+            const body = await response.json();
+            if (body.status !== user.emailAuthorListStatus) {
+              await User.updateOne({ _id: user._id }, { emailAuthorListStatus: body.status });
+              userLogged.emailAuthorListStatus = body.status;
+            }
+          }
+        } catch (mcErr) {
+          // Mailchimp unreachable — skip the status sync, still log the user in.
         }
       }
       res.json({

@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-var request = require('superagent');
 const User = require('../models/user');
 const Reviewer = require('../models/reviewer');
 const { verifyToken } = require('../lib/auth');
@@ -9,6 +8,7 @@ const mailchimpInstance = process.env.MAIL_CHIMP_INSTANCE;
 const listUniqueId = process.env.LIST_UNIQUE_ID;
 const url = `https://${mailchimpInstance}.api.mailchimp.com/3.0/lists/${listUniqueId}/members/`;
 const mailchimpApiKey = process.env.MAIL_CHIMP_API_KEY;
+const authHeader = 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64');
 
 router.delete('/', verifyToken(), async (req, res) => {
   try {
@@ -24,28 +24,25 @@ router.delete('/', verifyToken(), async (req, res) => {
     }
     const reviewer = await Reviewer.findOne({ author: userDoc._id });
     if (reviewer) {
-      request
-        .put(`${url}${user.email.toLowerCase()}`)
-        .set('Content-Type', 'application/json;charset=utf-8')
-        .set('Authorization', 'Basic ' + Buffer.from('anystring:' + mailchimpApiKey).toString('base64'))
-        .send({
+      // Unsubscribe from Mailchimp before deleting. A transport failure now
+      // rejects and is caught by the outer try/catch (no detached callback).
+      const response = await fetch(`${url}${user.email.toLowerCase()}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json;charset=utf-8',
+          'Authorization': authHeader
+        },
+        body: JSON.stringify({
           'email_address': user.email,
           'status': 'unsubscribed',
         })
-        .end(async function (err, response) {
-          // This callback is detached from the outer try/catch, so handle its
-          // own failures: a transport error leaves `response` undefined.
-          try {
-            if (response && (response.status < 300 || response.status === 400)) {
-              await userDoc.deleteOne();
-              res.json({ success: true, message: 'usuario borrado' });
-            } else {
-              res.json({ success: false, message: 'usuario borrado, pero no se pudo eliminar de la lista de correos.' });
-            }
-          } catch (deleteErr) {
-            res.json({ success: false, message: 'Hubo un error al intentar borrar el usuario' });
-          }
-        });
+      });
+      if (response.status < 300 || response.status === 400) {
+        await userDoc.deleteOne();
+        res.json({ success: true, message: 'usuario borrado' });
+      } else {
+        res.json({ success: false, message: 'usuario borrado, pero no se pudo eliminar de la lista de correos.' });
+      }
     } else {
       await userDoc.deleteOne();
       res.json({ success: true, message: 'usuario borrado' });

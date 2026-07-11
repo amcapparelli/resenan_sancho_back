@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Book = require('../models/book');
 const { verifyToken } = require('../lib/auth');
-const stripe = require('stripe')(process.env.STRIPE_SECRET);
+// Pin the API version the installed SDK (v22) targets, so upgrading the SDK
+// never silently changes behavior via the account's default API version.
+const stripe = require('stripe')(process.env.STRIPE_SECRET, { apiVersion: '2026-06-24.dahlia' });
 const promotions = require('../utils/constants/promotions');
 const {
   transporter,
@@ -29,7 +31,11 @@ router.post('/', verifyToken(), async function (req, res) {
       currency: 'EUR',
       description: 'Reseñan Sancho',
       payment_method: id,
-      confirm: true
+      confirm: true,
+      // Server-side card charge with no redirect flow: opt out of redirect-based
+      // methods so Stripe doesn't require a return_url (required since the API
+      // versions the v22 SDK targets).
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' }
     });
     const promoInfo = {};
     promoInfo.copies = book.copies + copies;

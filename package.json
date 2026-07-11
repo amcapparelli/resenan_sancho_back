@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "private": true,
   "engines": {
     "node": ">=22 <23"
@@ -22,9 +22,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.1",
     "morgan": "^1.11.0",
-    "nodemailer": "^6.4.6",
-    "stripe": "^8.51.0",
-    "superagent": "^3.8.3"
+    "nodemailer": "^9.0.3",
+    "stripe": "^22.3.1"
   },
   "devDependencies": {
     "jest": "^30.4.2",
