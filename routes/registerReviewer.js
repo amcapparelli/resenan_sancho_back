@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const Reviewer = require('../models/reviewer');
 const User = require('../models/user');
 const { verifyToken } = require('../lib/auth');
+const { countryForMailchimp } = require('../utils/mailchimpCountry');
 
 const mailchimpInstance = process.env.MAIL_CHIMP_INSTANCE;
 const listUniqueId = process.env.LIST_UNIQUE_ID;
@@ -81,7 +82,9 @@ router.post('/', async function (req, res) {
       genres.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
     const formatsForMailchimp = formatsMapper.reduce((acum, curr) => (
       formats.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
-    const userCountry = user.country ? user.country : 'N/A';
+    // El país se guarda como código ISO ('ES'); Mailchimp espera el nombre en
+    // español ('España'). Nunca enviar el código crudo (spec, puntos 6.1 y 8).
+    const userCountry = countryForMailchimp(user.country);
     const response = await fetch(url, {
       method: 'POST',
       headers: mailchimpHeaders,
@@ -153,7 +156,9 @@ router.put('/', verifyToken(), async (req, res) => {
       genres.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
     const formatsForMailchimp = formatsMapper.reduce((acum, curr) => (
       formats.includes(curr.name) ? { ...acum, [curr.code]: 'true' } : { ...acum, [curr.code]: 'false' }), {});
-    const userCountry = user.country ? user.country : 'N/A';
+    // El país se guarda como código ISO ('ES'); Mailchimp espera el nombre en
+    // español ('España'). Nunca enviar el código crudo (spec, puntos 6.1 y 8).
+    const userCountry = countryForMailchimp(user.country);
     const subscriberHash = crypto.createHash('md5').update(user.email.toLowerCase()).digest('hex');
     // Read the member's current subscription status so the PUT (an upsert)
     // preserves it while updating the merge fields. Unlike superagent, fetch

@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifyToken } = require('../lib/auth');
 const User = require('../models/user');
 const Reviewer = require('../models/reviewer');
+const { toIsoCode } = require('../utils/constants/legacyCountryMap');
 
 router.post('/', verifyToken(), async function (req, res) {
   try {
@@ -11,9 +12,14 @@ router.post('/', verifyToken(), async function (req, res) {
       res.json({ message: 'noPermissions' });
       return;
     }
+    // Capa de compatibilidad temporal (docs/country-iso-migration-spec.md, punto 4):
+    // durante el deploy no atómico el frontend puede enviar todavía un nombre
+    // legacy ("Spain") en vez del código ISO. Normalizamos a ISO alpha-2 antes de
+    // guardar; un valor no resoluble (vacío/desconocido) queda como null.
+    const countryIso = toIsoCode(country);
     await User.updateOne({ _id }, {
       avatar,
-      country,
+      country: countryIso,
       email,
       lastName,
       name,
@@ -21,7 +27,7 @@ router.post('/', verifyToken(), async function (req, res) {
     const userUpdated = {
       _id,
       avatar,
-      country,
+      country: countryIso,
       email,
       name,
       lastName

@@ -47,6 +47,22 @@ describe('PUT /registerReviewer', () => {
     // The PUT must carry the member's real subscription status string.
     const putCall = global.fetch.mock.calls[1];
     expect(JSON.parse(putCall[1].body).status).toBe('subscribed');
+    // PAIS must be the Spanish country name, never the raw ISO code.
+    expect(JSON.parse(putCall[1].body).merge_fields.PAIS).toBe('España');
+  });
+
+  test('sends PAIS as N/A when the user has no country', async () => {
+    User.findOne.mockResolvedValue({ _id: 'u1', email: 'a@b.com', name: 'Ana', country: null });
+    global.fetch.mockResolvedValueOnce(okMember())
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({}) });
+
+    await request(app)
+      .put('/registerReviewer')
+      .set('access-token', tokenFor({ _id: 'u1' }))
+      .send(body);
+
+    const putCall = global.fetch.mock.calls[1];
+    expect(JSON.parse(putCall[1].body).merge_fields.PAIS).toBe('N/A');
   });
 
   // Regression: with superagent a 404 GET threw and skipped the PUT. With fetch
