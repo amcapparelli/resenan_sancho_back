@@ -20,7 +20,8 @@ const genres = ['ADV', 'BIO', 'CIF', 'CRI', 'ERO', 'FAN', 'FCH', 'JUV', 'HIF', '
 const genreNames = ['adventure', 'biography', 'cienceFiction', 'crime', 'erotica', 'fantasy', 'forChildren', 'juvenile', 'historicalFiction', 'humor', 'poetry', 'policial', 'psychologicalDrama', 'romantic', 'suspense', 'terror', 'thriller'];
 const formats = ['Paperback', 'Hardcover', 'eBook', 'Audiobook'];
 const editorials = ['Penguin Random House', 'HarperCollins', 'Simon & Schuster', 'Hachette', 'Macmillan', 'Planeta', 'Anagrama', 'Alfaguara'];
-const countries = ['Spain', 'Mexico', 'Argentina', 'Colombia', 'USA', 'France', 'Germany', 'UK'];
+// Códigos ISO 3166-1 alpha-2 (el schema valida /^[A-Z]{2}$/ tras la migración).
+const countries = ['ES', 'MX', 'AR', 'CO', 'US', 'FR', 'DE', 'GB'];
 
 const firstNames = ['Alice', 'Bob', 'Carlos', 'Diana', 'Elena', 'Fran', 'Gabriel', 'Hannah', 'Ivan', 'Julia'];
 const lastNames = ['Smith', 'García', 'López', 'Martínez', 'Fernández', 'Johnson', 'Williams', 'Brown', 'Jones', 'Davis'];
