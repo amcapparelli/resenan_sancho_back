@@ -38,7 +38,7 @@ describe('GET /home/highlights', () => {
     jest.clearAllMocks();
     invalidateHomeHighlights();
     mockFind([bookDoc()]);
-    Book.aggregate.mockResolvedValue([{ _id: 'HIF', totalLibros: 142 }]);
+    Book.aggregate.mockResolvedValue([{ _id: 'HIF', totalBooks: 142 }]);
   });
 
   test('returns both blocks with a cachedAt timestamp', async () => {
@@ -53,7 +53,7 @@ describe('GET /home/highlights', () => {
       genre: 'HIF',
       copies: 8,
     }]);
-    expect(res.body.topGenres).toEqual([{ code: 'HIF', totalLibros: 142 }]);
+    expect(res.body.topGenres).toEqual([{ code: 'HIF', totalBooks: 142 }]);
     expect(Date.parse(res.body.cachedAt)).not.toBeNaN();
   });
 
@@ -67,8 +67,8 @@ describe('GET /home/highlights', () => {
     expect(query.limit).toHaveBeenCalledWith(4);
     expect(Book.aggregate).toHaveBeenCalledWith([
       { $match: { copies: { $gt: 0 } } },
-      { $group: { _id: '$genre', totalLibros: { $sum: 1 } } },
-      { $sort: { totalLibros: -1, _id: 1 } },
+      { $group: { _id: '$genre', totalBooks: { $sum: 1 } } },
+      { $sort: { totalBooks: -1, _id: 1 } },
       { $limit: 3 },
     ]);
   });
@@ -117,9 +117,9 @@ describe('GET /home/highlights', () => {
     expect(res.body).toEqual({ message: 'No se han podido cargar los destacados de la home' });
 
     // A later request must retry instead of serving a poisoned cache.
-    Book.aggregate.mockResolvedValue([{ _id: 'POE', totalLibros: 5 }]);
+    Book.aggregate.mockResolvedValue([{ _id: 'POE', totalBooks: 5 }]);
     const retry = await request(app).get('/home/highlights');
     expect(retry.status).toBe(200);
-    expect(retry.body.topGenres).toEqual([{ code: 'POE', totalLibros: 5 }]);
+    expect(retry.body.topGenres).toEqual([{ code: 'POE', totalBooks: 5 }]);
   });
 });
