@@ -58,4 +58,11 @@ const BookSchema = Schema({
   }],
 });
 
+// Serves the home "featured books" query: match copies > 0, sort by copies desc
+// (create_at only breaks ties, so the sort stays deterministic).
+BookSchema.index({ copies: -1, create_at: -1 });
+// Serves the home "top genres" aggregate: match copies > 0 and group by genre
+// straight from the index, without fetching the documents.
+BookSchema.index({ copies: 1, genre: 1 });
+
 module.exports = mongoose.model('book', BookSchema);
