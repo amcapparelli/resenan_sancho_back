@@ -43,7 +43,8 @@ desde `getServerSideProps` de home. Público, sin `verifyToken()`.
       "title": "...",
       "author": "Carlos Zafón",
       "genre": "HIF",
-      "copies": 8
+      "copies": 8,
+      "cover": "https://.../portada.jpg"
     }
   ],
   "topGenres": [
@@ -66,6 +67,9 @@ Las claves van en inglés, como el modelo y el resto de endpoints (`/books`).
   mismo criterio de disponibilidad que ya usa `routes/books.js`.
 - `author` viene aplanado a un string de display (`name + lastName`); la card
   sólo necesita un nombre y así no se filtran internos del usuario.
+- `cover` es la URL de la portada tal cual está en el modelo (`cover` es
+  `required`, así que siempre viene). La card la necesita para renderizar la
+  imagen sin un fetch extra por libro.
 - El libro no tiene `slug` en el modelo, y el destino del link es
   `/books/[id]` (SSR desde PR #64), así que se devuelve `id` a secas.
 
@@ -164,7 +168,7 @@ el número de ejemplares disponibles: `routes/orderBook.js` lo decrementa con
 Book.find({ copies: { $gt: 0 } })
   .sort({ copies: -1, create_at: -1 })
   .limit(4)
-  .select('title genre copies')
+  .select('title genre copies cover')
   .populate('author', 'name lastName')
   .lean();
 ```

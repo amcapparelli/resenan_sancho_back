@@ -29,6 +29,7 @@ const bookDoc = (overrides = {}) => ({
   title: 'La sombra del viento',
   genre: 'HIF',
   copies: 8,
+  cover: 'https://cdn.resenansancho.com/covers/b1.jpg',
   author: { name: 'Carlos', lastName: 'Zafón' },
   ...overrides,
 });
@@ -52,6 +53,7 @@ describe('GET /home/highlights', () => {
       author: 'Carlos Zafón',
       genre: 'HIF',
       copies: 8,
+      cover: 'https://cdn.resenansancho.com/covers/b1.jpg',
     }]);
     expect(res.body.topGenres).toEqual([{ code: 'HIF', totalBooks: 142 }]);
     expect(Date.parse(res.body.cachedAt)).not.toBeNaN();
@@ -78,7 +80,7 @@ describe('GET /home/highlights', () => {
 
     await request(app).get('/home/highlights');
 
-    expect(query.select).toHaveBeenCalledWith('title genre copies');
+    expect(query.select).toHaveBeenCalledWith('title genre copies cover');
     expect(query.populate).toHaveBeenCalledWith('author', 'name lastName');
   });
 
