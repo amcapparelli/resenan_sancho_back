@@ -56,6 +56,12 @@ const BookSchema = Schema({
     type: Schema.ObjectId,
     ref: 'user'
   }],
+  // Set only after a real (non dry-run) Instagram publication, so the same book
+  // is never posted twice. See docs/instagram-autopost-spec.md.
+  instagramPostedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 // Serves the home "featured books" query: match copies > 0, sort by copies desc
