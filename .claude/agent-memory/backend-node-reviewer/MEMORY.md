@@ -1,0 +1,4 @@
+- [API response shape](api-response-shape.md) — endpoints return `{ success, message }` JSON; errors swallowed to 200 in some routes
+- [Mongoose upgrade migration](mongoose-upgrade.md) — incremental 5→6→7→8→9 dependency upgrade on feature branches, phased
+- [Model registration names](model-names.md) — model names are lowercase singular: `user`, `book`, `reviewer`
+- [Mailchimp fetch semantics](mailchimp-fetch-semantics.md) — 400=success in 2 files; fetch doesn't throw on non-2xx; never persist numeric body.status
