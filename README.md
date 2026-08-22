@@ -20,6 +20,57 @@ npm start     # start the server (defaults to port 9000)
 npm test      # run the test suite
 ```
 
+## Instagram autopost
+
+When a book is created, the backend publishes a branded 1080x1350 image plus a
+Spanish caption on the official Instagram account. It runs after the response is
+sent, so it never delays nor breaks the book creation, and any failure is only
+logged (prefix `[instagram-autopost]`). Full spec:
+`docs/instagram-autopost-spec.md`.
+
+### Environment variables
+
+| Variable | Default | What it does |
+|---|---|---|
+| `SOCIAL_AUTOPOST_ENABLED` | `false` | Master switch. With `false` the feature does nothing. |
+| `IG_DRY_RUN` | `true` | See below. `false` = really publish. |
+| `IG_PAGE_ACCESS_TOKEN` | — | Long-lived page access token (secret). |
+| `IG_BUSINESS_ACCOUNT_ID` | — | Instagram business account id (`ig-user-id`), not the `@handle`. |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | — | Used to upload the generated image to the `instagram-posts/` folder; the Graph API needs a public URL. |
+
+All of them are read at publish time, not at boot, so the feature can be turned
+off or moved out of dry-run by changing a config var — no redeploy needed.
+
+### Dry run
+
+`IG_DRY_RUN=true` (the default, and what you want locally) exercises the whole
+pipeline except the external calls: the image is generated and the caption is
+built, but **nothing** is uploaded to Cloudinary and **no** Graph API call is
+made. The image is written to:
+
+```
+tmp/ig-preview-<bookId>-<timestamp>.jpg
+```
+
+and the caption, that path and the `ig-user-id` that would have been used are
+printed to the console. `instagramPostedAt` is **not** set, because nothing was
+really published. In production (Heroku) the variable is `false`.
+
+To review the layout without creating a book, render a sample straight into
+`tmp/`:
+
+```bash
+node scripts/instagramPreview.js                 # sample book
+node scripts/instagramPreview.js "Otro título" https://url/de/portada.jpg
+```
+
+### Fonts
+
+The image is composited with `@napi-rs/canvas`, which ships no fonts: it falls
+back to generic system faces (serif for the title, sans for the rest). Dropping
+the brand `.ttf`/`.otf` files (Fraunces, Source Sans 3) into `assets/fonts/`
+registers them automatically — no code change needed.
+
 # Scripts
 
 ## Seed

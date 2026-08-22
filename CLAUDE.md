@@ -49,12 +49,15 @@ There is no build step. The seed script refuses to run unless `MONGOOSE_CONNECTI
 **Integrations** (all keyed off env vars):
 - **Stripe** (`routes/paymentCheckout.js`) — `paymentIntents.create` to charge for promotion copies. The client pins `apiVersion` and the charge sets `automatic_payment_methods: { enabled: true, allow_redirects: 'never' }` (server-side card charge, no redirect flow — required by the current API when `confirm: true`).
 - **Nodemailer** (`lib/email.js`) — exports a shared `transporter` plus HTML template builders (password reset, book-copy request, promo confirmations). Used by routes like `registerBook`, `paymentCheckout`, `orderBook`.
+- **Instagram autopost** (`lib/instagram/`) — after a book is created, `publishToInstagram(book)` is fired **without await** from `routes/registerBook.js`: it renders a branded JPEG with `@napi-rs/canvas`, uploads it to Cloudinary and posts it through the Meta Graph API. Every env var (`SOCIAL_AUTOPOST_ENABLED`, `IG_DRY_RUN`, …) is read at call time, never at boot. Failures are logged and swallowed — they must never affect the response. See `README.md` and `docs/instagram-autopost-spec.md`.
 - **Mailchimp** (`routes/login.js`, `registerReviewer.js`, `suscribeAuthor.js`, `deleteUser.js`) — syncs email subscription status via the Mailchimp REST API using the built-in **`fetch`** (no HTTP client dependency). Mailchimp returns HTTP **400** for an already-existing member, which the code treats as success; on a non-2xx response the JSON body's `status` is a numeric HTTP code (not a subscription string), so guard on `response.ok` before reading it.
 
 ## Environment
 
 Requires a `.env` file (loaded by `dotenv` in `lib/connectMongoose.js`). Variables in use:
-`MONGOOSE_CONNECTION_STRING`, `PORT`, `FRONTEND_URL`, `JWT_SECRET`, `STRIPE_SECRET`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_CHIMP_INSTANCE`, `MAIL_CHIMP_API_KEY`, `LIST_UNIQUE_ID`, `WRITERS_LIST_UNIQUE_ID`.
+`MONGOOSE_CONNECTION_STRING`, `PORT`, `FRONTEND_URL`, `JWT_SECRET`, `STRIPE_SECRET`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_CHIMP_INSTANCE`, `MAIL_CHIMP_API_KEY`, `LIST_UNIQUE_ID`, `WRITERS_LIST_UNIQUE_ID`,
+`SOCIAL_AUTOPOST_ENABLED`, `IG_DRY_RUN`, `IG_PAGE_ACCESS_TOKEN`, `IG_BUSINESS_ACCOUNT_ID`,
+`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
 
 ## Tests
 
