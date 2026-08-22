@@ -1,6 +1,10 @@
 jest.mock('../models/book', () => require('./helpers/modelMock').makeModelMock(['findOne']));
+jest.mock('../lib/instagram/image', () => ({ renderBookImage: jest.fn().mockResolvedValue(Buffer.from('jpeg')) }));
+jest.mock('../lib/instagram/preview', () => ({ savePreview: jest.fn().mockResolvedValue('/tmp/ig-preview-b1.jpg') }));
 
 const { publishToInstagram, buildBookData } = require('../lib/instagram');
+const { renderBookImage } = require('../lib/instagram/image');
+const { savePreview } = require('../lib/instagram/preview');
 
 const bookDoc = (overrides = {}) => ({
   _id: 'b1',
@@ -55,6 +59,42 @@ describe('publishToInstagram', () => {
       '[instagram-autopost]',
       'error',
       expect.objectContaining({ step: 'publish', bookId: 'b1', message: 'boom' })
+    );
+  });
+
+  test('in dry run it renders and saves the preview without marking the book as posted', async () => {
+    process.env.IG_BUSINESS_ACCOUNT_ID = '17841405744435526';
+    const book = bookDoc({ populate: jest.fn().mockResolvedValue(bookDoc()), save: jest.fn() });
+
+    await publishToInstagram(book);
+
+    expect(renderBookImage).toHaveBeenCalledWith(expect.objectContaining({ id: 'b1', title: 'El libro' }));
+    expect(savePreview).toHaveBeenCalledWith(expect.any(Buffer), 'b1');
+    expect(book.instagramPostedAt).toBeNull();
+    expect(book.save).not.toHaveBeenCalled();
+    expect(console.log).toHaveBeenCalledWith(
+      '[instagram-autopost]',
+      'dry run, nothing published',
+      expect.objectContaining({
+        bookId: 'b1',
+        previewPath: '/tmp/ig-preview-b1.jpg',
+        igUserId: '17841405744435526',
+        caption: expect.stringContaining('Nuevo libro disponible para reseñar'),
+      })
+    );
+  });
+
+  test('aborts the publication when the cover cannot be downloaded', async () => {
+    renderBookImage.mockRejectedValueOnce(new Error('cover download failed with status 404'));
+    const book = bookDoc({ populate: jest.fn().mockResolvedValue(bookDoc()) });
+
+    await expect(publishToInstagram(book)).resolves.toBeUndefined();
+
+    expect(savePreview).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith(
+      '[instagram-autopost]',
+      'error',
+      expect.objectContaining({ bookId: 'b1', message: 'cover download failed with status 404' })
     );
   });
 

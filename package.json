@@ -12,6 +12,7 @@
     "seed": "node ./scripts/seed.js"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^1.0.7",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
