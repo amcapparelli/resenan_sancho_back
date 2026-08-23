@@ -22,11 +22,18 @@ npm test      # run the test suite
 
 ## Instagram autopost
 
-When a book is created, the backend publishes a branded 1080x1350 image plus a
-Spanish caption on the official Instagram account. It runs after the response is
-sent, so it never delays nor breaks the book creation, and any failure is only
-logged (prefix `[instagram-autopost]`). Full spec:
-`docs/instagram-autopost-spec.md`.
+When a book gets its first copies — and therefore becomes orderable — the
+backend publishes a branded 1080x1350 image plus a Spanish caption on the
+official Instagram account. Every flow that adds copies calls
+`triggerInstagramPostIfEligible(book)` (`lib/instagram/trigger.js`) right after
+the update is persisted: the free promo (`routes/promotions.js`) and the paid
+one (`routes/paymentCheckout.js`). Only the first one publishes; the rest stop
+at the `instagramPostedAt` guard inside `publishToInstagram`.
+
+It runs after the response is sent, so it never delays nor breaks the request,
+and any failure is only logged (prefix `[instagram-autopost]`). Full spec:
+`docs/instagram-autopost-spec.md` plus
+`docs/instagram-autopost-trigger-update-spec.md` for the trigger change.
 
 ### Environment variables
 

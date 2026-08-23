@@ -7,7 +7,6 @@ const {
   transporter,
   newBookTemplate
 } = require('../lib/email');
-const { publishToInstagram } = require('../lib/instagram');
 
 router.post('/', async function (req, res) {
   try {
@@ -30,11 +29,6 @@ router.post('/', async function (req, res) {
       });
     };
     sendMail();
-    // Not awaited on purpose: Instagram must never delay nor break the book
-    // creation response (docs/instagram-autopost-spec.md, section 10).
-    // The service already swallows its own errors; the .catch() is the last-resort
-    // guard so a bug there can never become an unhandled rejection.
-    publishToInstagram(newBook).catch(() => {});
     res.json({
       success: true,
       message: '¡Libro registrado! Puedes editarlo desde la sección "Mis Libros". ¡No te olvides de agregar ejemplares con la opción PROMOCIONAR!'

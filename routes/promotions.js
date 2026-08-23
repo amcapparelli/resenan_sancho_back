@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifyToken } = require('../lib/auth');
 const Book = require('../models/book');
 const promotions = require('../utils/constants/promotions');
+const { triggerInstagramPostIfEligible } = require('../lib/instagram/trigger');
 
 router.put('/:id', verifyToken(), async function (req, res) {
   try {
@@ -28,6 +29,11 @@ router.put('/:id', verifyToken(), async function (req, res) {
     }
     await Book.updateOne({ _id: id }, { ...promoInfo });
     const bookUpdated = await Book.findOne({ _id: id });
+    // Not awaited on purpose: Instagram must never delay nor break this
+    // response (docs/instagram-autopost-spec.md, section 10). The service
+    // already swallows its own errors; the .catch() is the last-resort guard
+    // so a bug there can never become an unhandled rejection.
+    triggerInstagramPostIfEligible(bookUpdated).catch(() => {});
     res.json({
       success: true,
       message: `¡Copias añadidas!. Se están ofreciendo ${bookUpdated.copies} de tu libro ${bookUpdated.title}`,

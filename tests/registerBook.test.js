@@ -10,13 +10,15 @@ jest.mock('../lib/email', () => ({
   transporter: { sendMail: jest.fn((template, cb) => cb(null)) },
   newBookTemplate: jest.fn(() => ({})),
 }));
-jest.mock('../lib/instagram', () => ({ publishToInstagram: jest.fn().mockResolvedValue(undefined) }));
+jest.mock('../lib/instagram/trigger', () => ({
+  triggerInstagramPostIfEligible: jest.fn().mockResolvedValue(undefined),
+}));
 
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const Book = require('../models/book');
 const User = require('../models/user');
-const { publishToInstagram } = require('../lib/instagram');
+const { triggerInstagramPostIfEligible } = require('../lib/instagram/trigger');
 const app = require('../app');
 
 const tokenFor = (user) => jwt.sign({ user }, process.env.JWT_SECRET);
@@ -45,24 +47,16 @@ describe('registerBook routes', () => {
     expect(Book.updateOne).not.toHaveBeenCalled();
   });
 
-  test('POST /registerBook triggers the Instagram autopost with the saved book', async () => {
+  // The autopost now runs when copies are added, not when the book is created:
+  // a brand new book has no copies yet, so it is not orderable.
+  test('POST /registerBook does not trigger the Instagram autopost', async () => {
     Book.findOne.mockResolvedValue(null);
     User.findOne.mockResolvedValue({ email: 'a@b.com', name: 'Ana' });
 
     const res = await request(app).post('/registerBook').send({ title: 'Nuevo', author: 'u1' });
 
     expect(res.body.success).toBe(true);
-    expect(publishToInstagram).toHaveBeenCalledWith(expect.objectContaining({ title: 'Nuevo' }));
-  });
-
-  test('POST /registerBook still succeeds when the Instagram autopost fails', async () => {
-    Book.findOne.mockResolvedValue(null);
-    User.findOne.mockResolvedValue({ email: 'a@b.com', name: 'Ana' });
-    publishToInstagram.mockRejectedValueOnce(new Error('instagram down'));
-
-    const res = await request(app).post('/registerBook').send({ title: 'Otro', author: 'u1' });
-
-    expect(res.body.success).toBe(true);
+    expect(triggerInstagramPostIfEligible).not.toHaveBeenCalled();
   });
 
   test('PUT /registerBook/:id requires a token', async () => {
