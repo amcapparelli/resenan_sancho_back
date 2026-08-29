@@ -17,12 +17,18 @@ jest.mock('../models/reviewer', () => require('./helpers/modelMock').makeModelMo
 jest.mock('../lib/instagram/trigger', () => ({
   triggerInstagramPostIfEligible: jest.fn().mockResolvedValue(undefined),
 }));
+jest.mock('../lib/email', () => ({
+  transporter: { sendMail: jest.fn((template, cb) => cb(null)) },
+  emailPromoTemplate: jest.fn(() => ({})),
+  paymentSuccessNotificationTemplate: jest.fn((bookTitle) => ({ to: 'alejandro@resenansancho.com', subject: `Pago recibido: ${bookTitle}` })),
+}));
 
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const stripe = require('stripe');
 const Book = require('../models/book');
 const { triggerInstagramPostIfEligible } = require('../lib/instagram/trigger');
+const { transporter } = require('../lib/email');
 const app = require('../app');
 
 const tokenFor = (user) => jwt.sign({ user }, process.env.JWT_SECRET);
@@ -62,6 +68,10 @@ describe('POST /paymentCheckout', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.message).toMatch(/5/);
     expect(triggerInstagramPostIfEligible).toHaveBeenCalledWith(updated);
+    expect(transporter.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'alejandro@resenansancho.com', subject: expect.stringContaining('MyBook') }),
+      expect.any(Function)
+    );
   });
 
   test('still responds with success when the Instagram autopost fails', async () => {
