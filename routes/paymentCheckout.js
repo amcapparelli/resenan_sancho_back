@@ -8,7 +8,8 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET, { apiVersion: '2026-
 const promotions = require('../utils/constants/promotions');
 const {
   transporter,
-  emailPromoTemplate
+  emailPromoTemplate,
+  paymentSuccessNotificationTemplate
 } = require('../lib/email');
 const { triggerInstagramPostIfEligible } = require('../lib/instagram/trigger');
 
@@ -47,6 +48,14 @@ router.post('/', verifyToken(), async function (req, res) {
     // already swallows its own errors; the .catch() is the last-resort guard
     // so a bug there can never become an unhandled rejection.
     triggerInstagramPostIfEligible(bookUpdated).catch(() => {});
+    // Internal notification of the successful payment. Not awaited on purpose,
+    // same reasoning as the Instagram autopost above: it must never delay nor
+    // break the response.
+    transporter.sendMail(paymentSuccessNotificationTemplate(bookUpdated.title, amount), (err) => {
+      if (err) {
+        console.log('err', err);
+      }
+    });
     //If email promotion, send email to author
     if (chosenPromo === 3) {
       const emailTemplate = emailPromoTemplate(req.authData.user.email);
