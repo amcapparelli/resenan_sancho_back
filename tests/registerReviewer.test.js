@@ -80,4 +80,58 @@ describe('PUT /registerReviewer', () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
     expect(res.body).toEqual({ success: false, message: 'no se pudo guardar los cambios' });
   });
+
+  test('persiste tiktok y podcast y los devuelve en la respuesta', async () => {
+    global.fetch.mockResolvedValueOnce(okMember())
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({}) });
+    const tiktok = { name: '@ana', url: 'https://www.tiktok.com/@ana' };
+    const podcast = { name: 'Libros y café', url: 'https://www.ivoox.com/podcast-libros_sq_f1.html' };
+
+    const res = await request(app)
+      .put('/registerReviewer')
+      .set('access-token', tokenFor({ _id: 'u1' }))
+      .send({ ...body, tiktok, podcast });
+
+    expect(res.body.success).toBe(true);
+    expect(Reviewer.updateOne).toHaveBeenCalledWith(
+      { author: 'u1' },
+      expect.objectContaining({ tiktok, podcast }),
+    );
+    expect(res.body.reviewer).toEqual(expect.objectContaining({ tiktok, podcast }));
+  });
+});
+
+describe('POST /registerReviewer — canales TikTok y Podcast', () => {
+  const ok = () => ({ ok: true, status: 200, json: async () => ({}) });
+  const base = { author: 'u1', genres: ['romantic'], formats: ['papel'], description: 'x' };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.fetch = jest.fn().mockResolvedValue(ok());
+    User.findOne.mockResolvedValue({ _id: 'u1', email: 'a@b.com', name: 'Ana', country: 'ES' });
+    Reviewer.findOne.mockResolvedValue(null);
+  });
+
+  test('un perfil con solo TikTok se guarda con el canal', async () => {
+    const tiktok = { name: '@ana', url: 'https://www.tiktok.com/@ana' };
+
+    const res = await request(app).post('/registerReviewer').send({ ...base, tiktok });
+
+    expect(res.body.success).toBe(true);
+    expect(Reviewer).toHaveBeenCalledWith(expect.objectContaining({ tiktok }));
+    expect(res.body.reviewer.tiktok).toEqual(tiktok);
+  });
+
+  test('un perfil con solo Podcast se guarda y se sincroniza con Mailchimp', async () => {
+    const podcast = { name: 'Libros y café', url: 'https://open.spotify.com/show/abc' };
+
+    const res = await request(app).post('/registerReviewer').send({ ...base, podcast });
+
+    expect(res.body.success).toBe(true);
+    expect(Reviewer).toHaveBeenCalledWith(expect.objectContaining({ podcast }));
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const [mcUrl, mcInit] = global.fetch.mock.calls[0];
+    expect(mcUrl).toContain('/lists/list123/members/');
+    expect(JSON.parse(mcInit.body).email_address).toBe('a@b.com');
+  });
 });

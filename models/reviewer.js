@@ -37,6 +37,14 @@ const ReviewerSchema = Schema({
     url: String,
     name: String,
   },
+  tiktok: {
+    url: String,
+    name: String,
+  },
+  podcast: {
+    url: String,
+    name: String,
+  },
   create_at: {
     type: Date,
     default: Date.now

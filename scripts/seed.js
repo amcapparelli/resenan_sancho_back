@@ -117,6 +117,8 @@ async function seed() {
     bookstagram: i % 2 === 1 ? { url: `https://instagram.com/books${i}`, name: `@${user.name.toLowerCase()}reads` } : {},
     goodreads: { url: `https://goodreads.com/user/${user._id}`, name: user.name },
     amazon: i % 4 === 0 ? { url: `https://amazon.com/profile/${i}`, name: `${user.name} Reviews` } : {},
+    tiktok: i % 3 === 1 ? { url: `https://www.tiktok.com/@books${i}`, name: `@${user.name.toLowerCase()}reads` } : {},
+    podcast: i % 5 === 0 ? { url: `https://open.spotify.com/show/${i}`, name: `${user.name} Podcast` } : {},
   }));
 
   const reviewers = await Reviewer.insertMany(reviewerData);
