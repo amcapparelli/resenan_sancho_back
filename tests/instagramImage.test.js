@@ -1,5 +1,5 @@
 const { createCanvas } = require('@napi-rs/canvas');
-const { renderBookImage, wrapText, WIDTH, HEIGHT } = require('../lib/instagram/image');
+const { renderBookImage, wrapText } = require('../lib/instagram/image');
 
 const book = {
   id: 'b1',
@@ -20,15 +20,31 @@ const jpegResponse = async () => {
 };
 
 describe('wrapText', () => {
-  test('breaks by words, never mid-word', () => {
-    const ctx = createCanvas(WIDTH, HEIGHT).getContext('2d');
-    ctx.font = '600 56px Georgia';
+  // Fixed-width fake context: real font metrics depend on the fonts installed
+  // on the host (they changed when GitHub moved ubuntu-latest to 26.04), so the
+  // algorithm is tested against deterministic widths instead.
+  const CHAR_WIDTH = 10;
+  const fakeCtx = { measureText: (text) => ({ width: text.length * CHAR_WIDTH }) };
 
-    const lines = wrapText(ctx, 'una frase bastante larga que no cabe entera en una sola linea del lienzo', 400);
+  test('breaks by words, never mid-word, keeping every line within maxWidth', () => {
+    const text = 'una frase bastante larga que no cabe entera en una sola linea del lienzo';
+
+    const lines = wrapText(fakeCtx, text, 200);
 
     expect(lines.length).toBeGreaterThan(1);
-    lines.forEach((line) => expect(ctx.measureText(line).width).toBeLessThanOrEqual(400));
-    expect(lines.join(' ')).toBe('una frase bastante larga que no cabe entera en una sola linea del lienzo');
+    lines.forEach((line) => expect(fakeCtx.measureText(line).width).toBeLessThanOrEqual(200));
+    expect(lines.join(' ')).toBe(text);
+  });
+
+  test('puts a word wider than maxWidth on its own line instead of splitting it', () => {
+    const lines = wrapText(fakeCtx, 'un supercalifragilistico titulo', 100);
+
+    expect(lines).toEqual(['un', 'supercalifragilistico', 'titulo']);
+  });
+
+  test('returns no lines for empty text', () => {
+    expect(wrapText(fakeCtx, '', 100)).toEqual([]);
+    expect(wrapText(fakeCtx, undefined, 100)).toEqual([]);
   });
 });
 
